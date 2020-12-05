@@ -20,6 +20,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -153,6 +156,8 @@ int main(void)
   /* Create the queue(s) */
   /* creation of myQueue01 */
   myQueue01Handle = osMessageQueueNew (16, sizeof(uint16_t), &myQueue01_attributes);
+
+	//myQueue01Handle = osMessageCreate(osMessageQ(myQueue01Handle), NULL);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -524,21 +529,23 @@ void StartDefaultTask(void *argument)
 //	HAL_SPI_TransmitReceive(&hspi1, txBuf, rxBuf, 21, 200);
 //  /* Infinite loop */
 	float rotate_time = 10;
+		myQueue01Handle = xQueueCreate( 8, sizeof( uint8_t ) );
+		uint8_t toSend;
   for(;;)
   {
 		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
  		HAL_SPI_TransmitReceive(&hspi1, txBuf, rxBuf, 1, 200);
 		for (int i = 0; i<100;i++);
-		HAL_UART_Transmit(&huart2, rxBuf, 1, 200);
+//		HAL_UART_Transmit(&huart2, rxBuf, 1, 200);
 		HAL_SPI_TransmitReceive(&hspi1, txBuf+1, rxBuf+1, 1, 200);
 		for (int i = 0; i<100;i++);
-		HAL_UART_Transmit(&huart2, rxBuf, 1, 200);
+//		HAL_UART_Transmit(&huart2, rxBuf, 1, 200);
 		HAL_SPI_TransmitReceive(&hspi1, txBuf+2, rxBuf+2, 1, 200);
 		for (int i = 0; i<100;i++);
-		HAL_UART_Transmit(&huart2, rxBuf, 1, 200);
+//		HAL_UART_Transmit(&huart2, rxBuf, 1, 200);
 		HAL_SPI_TransmitReceive(&hspi1, txBuf+3, rxBuf+3, 1, 200);
 		for (int i = 0; i<100;i++);
-		HAL_UART_Transmit(&huart2, rxBuf, 1, 200);
+//		HAL_UART_Transmit(&huart2, rxBuf, 1, 200);
 		HAL_SPI_TransmitReceive(&hspi1, txBuf+4, rxBuf+4, 1, 200);
 //		HAL_UART_Transmit(&huart3, rxBuf, 21, 200);
 		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
@@ -547,16 +554,26 @@ void StartDefaultTask(void *argument)
 		//Rotating
 
 		//HAL_SPI_TransmitReceive(&hspi1, rxBuf, txBuf, sizeof(txBuf), 200);
-		if (rxBuf[4] == 0xEF || rxBuf[4] != 0xFF) {
+		if ( rxBuf[4] == 0xEF) {
 //		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
 //		osDelay(rotate_time);
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+			toSend = 0;
+	//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+			xQueueSend( myQueue01Handle, ( void * ) &toSend, portMAX_DELAY  );
 		}
-		else	{
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+		else if( rxBuf[4] == 0x7F){
+			toSend = 1;
+	//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+				xQueueSend( myQueue01Handle, ( void * ) &toSend, portMAX_DELAY  );
+			
 		}
 			
     osDelay(10);
+		
+		///Queue test
+	//	osMessagePut( myQueue01, , 100);
+	
+		
   }
 
   /* USER CODE END 5 */
@@ -568,16 +585,32 @@ void StartDefaultTask(void *argument)
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTask02 */
+/* USER CODE ENfD Header_StartTask02 */
 void StartTask02(void *argument)
 {
   /* USER CODE BEGIN StartTask02 */
   /* Infinite loop */
+	uint8_t rec;
   for(;;)
   {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask02 */
+		xQueueReceive( myQueue01Handle, &( rec ), portMAX_DELAY ); 
+
+		if (rec) 
+		{
+//		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+//		osDelay(rotate_time);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+			for (int i = 0; i<50;i++);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+			for (int i = 0; i<50;i++);
+			
+		}
+		else	{
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+		}
+		//osDelay(100);
+	}
+  /* USER CODE END StartTask02 */		
 }
 
 /* Callback01 function */
