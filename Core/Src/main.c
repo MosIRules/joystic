@@ -20,9 +20,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -48,6 +45,9 @@ SPI_HandleTypeDef hspi1;
 DMA_HandleTypeDef hdma_spi1_rx;
 DMA_HandleTypeDef hdma_spi1_tx;
 
+TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
+
 UART_HandleTypeDef huart2;
 DMA_HandleTypeDef hdma_usart2_rx;
 DMA_HandleTypeDef hdma_usart2_tx;
@@ -66,10 +66,27 @@ const osThreadAttr_t myTask02_attributes = {
   .priority = (osPriority_t) osPriorityLow,
   .stack_size = 256 * 4
 };
+/* Definitions for myTask03 */
+osThreadId_t myTask03Handle;
+const osThreadAttr_t myTask03_attributes = {
+  .name = "myTask03",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 256 * 4
+};
 /* Definitions for myQueue01 */
 osMessageQueueId_t myQueue01Handle;
 const osMessageQueueAttr_t myQueue01_attributes = {
   .name = "myQueue01"
+};
+/* Definitions for myQueueData */
+osMessageQueueId_t myQueueDataHandle;
+const osMessageQueueAttr_t myQueueData_attributes = {
+  .name = "myQueueData"
+};
+/* Definitions for myQueue03 */
+osMessageQueueId_t myQueue03Handle;
+const osMessageQueueAttr_t myQueue03_attributes = {
+  .name = "myQueue03"
 };
 /* Definitions for myTimer01 */
 osTimerId_t myTimer01Handle;
@@ -86,8 +103,11 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM2_Init(void);
+static void MX_TIM3_Init(void);
 void StartDefaultTask(void *argument);
 void StartTask02(void *argument);
+void StartTask03(void *argument);
 void Callback01(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -130,8 +150,10 @@ int main(void)
   MX_DMA_Init();
   MX_SPI1_Init();
   MX_USART2_UART_Init();
+  MX_TIM2_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -157,7 +179,11 @@ int main(void)
   /* creation of myQueue01 */
   myQueue01Handle = osMessageQueueNew (16, sizeof(uint16_t), &myQueue01_attributes);
 
-	//myQueue01Handle = osMessageCreate(osMessageQ(myQueue01Handle), NULL);
+  /* creation of myQueueData */
+  myQueueDataHandle = osMessageQueueNew (16, sizeof(uint16_t), &myQueueData_attributes);
+
+  /* creation of myQueue03 */
+  myQueue03Handle = osMessageQueueNew (16, sizeof(uint16_t), &myQueue03_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -169,6 +195,9 @@ int main(void)
 
   /* creation of myTask02 */
   myTask02Handle = osThreadNew(StartTask02, NULL, &myTask02_attributes);
+
+  /* creation of myTask03 */
+  myTask03Handle = osThreadNew(StartTask03, NULL, &myTask03_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -266,6 +295,108 @@ static void MX_SPI1_Init(void)
 }
 
 /**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 71;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 999;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 99;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+  HAL_TIM_MspPostInit(&htim2);
+
+}
+
+/**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 35;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 99;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 1;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+  HAL_TIM_MspPostInit(&htim3);
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -339,7 +470,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13|GPIO_PIN_14, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, SPI1_CS_Pin|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11
@@ -349,9 +480,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15
                           |GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PC13 */
-  GPIO_InitStruct.Pin = GPIO_PIN_13;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  /*Configure GPIO pins : PC13 PC14 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
@@ -394,186 +525,96 @@ void StartDefaultTask(void *argument)
 	uint8_t txBuf[21];
 	uint8_t rxBuf[21];
 	
-//	osDelay(100);
-//	for(;;)
-//	{
-//		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
-//		for(int i = 140; i > 0; i--);
-//		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-//		for(int i = 140; i > 0; i--);
-//	}	
-	
-//	//-------------------
-//	// cs0	
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
-//	//txBuf[0] = 0xC0;
-//	//txBuf[1] = 0x21;
-//	
-//	txBuf[0] = 0x03;
-//	txBuf[1] = 0x84;
-//	txBuf[2] = 0x00;
-//	txBuf[3] = 0x00;
-//	txBuf[4] = 0x00;
-//	txBuf[5] = 0x00;
-//	txBuf[6] = 0x00;
-//	txBuf[7] = 0x00;
-//	txBuf[8] = 0x00;	
-//	//for(uint8_t i = 2; i < 8; i++) txBuf[i] = 0x00; 
-//	HAL_SPI_TransmitReceive(&hspi1, txBuf, rxBuf, 9, 200);
-//	//-------------------
-//	// cs1
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-//	osDelay(1);
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
-//	txBuf[0] = 0x01;
-//	txBuf[1] = 0x42;
-//	txBuf[2] = 0x00;
-//	txBuf[3] = 0x00;
-//	txBuf[4] = 0x00;
-//	txBuf[5] = 0x00;
-//	txBuf[6] = 0x00;
-//	txBuf[7] = 0x00;
-//	txBuf[8] = 0x00;	
-//	//for(uint8_t i = 2; i < 9; i++) txBuf[i] = 0x00;
-//	HAL_SPI_TransmitReceive(&hspi1, txBuf, rxBuf, 9, 200);
-////	//-------------------
-//	// cs2
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-//	osDelay(1);
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
-//	txBuf[0] = 0x80;
-//	txBuf[1] = 0xC2;
-//	txBuf[2] = 0x00;
-//	txBuf[3] = 0x80;
-//	txBuf[4] = 0x00;	
-//	HAL_SPI_TransmitReceive(&hspi1, txBuf, rxBuf, 5, 200);
-//	//-------------------
-//	// cs3
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-//	osDelay(3);
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
-//	txBuf[0] = 0x80;
-//	txBuf[1] = 0xA2;
-//	txBuf[2] = 0x00;
-//	txBuf[3] = 0x5A;
-//	txBuf[4] = 0x5A;
-//	txBuf[5] = 0x5A;
-//	txBuf[6] = 0x5A;	
-//	txBuf[7] = 0x5A;
-//	txBuf[8] = 0x5A;	
-//	HAL_SPI_TransmitReceive(&hspi1, txBuf, rxBuf, 9, 200);
-//	//-------------------
-//	// cs4
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-//	osDelay(1);
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
-//	txBuf[0] = 0x80;
-//	txBuf[1] = 0x22;
-//	txBuf[2] = 0x00;
-//	txBuf[3] = 0x80;
-//	txBuf[4] = 0xC0;
-//	txBuf[5] = 0x00;
-//	txBuf[6] = 0x00;
-//	txBuf[7] = 0x00;
-//	txBuf[8] = 0x00;	
-//	HAL_SPI_TransmitReceive(&hspi1, txBuf, rxBuf, 9, 200);
-//	//-------------------
-	// cs5
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-//	osDelay(3);
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
 	txBuf[0] = 0x01;
 	txBuf[1] = 0x42;
 	txBuf[2] = 0x00;
 	txBuf[3] = 0xFF;
 	txBuf[4] = 0xFF;	
-//	HAL_SPI_TransmitReceive(&hspi1, txBuf, rxBuf, 5, 200);
-//	//-------------------
-//	// cs6
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-//	osDelay(3);
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
-//	txBuf[0] = 0x80;
-//	txBuf[1] = 0xF2;
-//	txBuf[2] = 0x00;
-//	txBuf[3] = 0xFF;
-//	txBuf[4] = 0xFF;
-//	txBuf[5] = 0xC0;
-//	txBuf[6] = 0x00;
-//	txBuf[7] = 0x00;
-//	txBuf[8] = 0x00;
-//	HAL_SPI_TransmitReceive(&hspi1, txBuf, rxBuf, 9, 200);
-//	//-------------------
-//	// cs7
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-//	osDelay(3);
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
-//	txBuf[0] = 0x80;
-//	txBuf[1] = 0xC2;
-//	txBuf[2] = 0x00;
-//	txBuf[3] = 0x5A;
-//	txBuf[4] = 0x5A;
-//	txBuf[5] = 0x5A;
-//	txBuf[6] = 0x5A;	
-//	txBuf[7] = 0x5A;
-//	txBuf[8] = 0x5A;	
-//	HAL_SPI_TransmitReceive(&hspi1, txBuf, rxBuf, 9, 200);
-//	//-------------------
-	// cs8	
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-//	osDelay(3);
-//	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
-//	txBuf[0] = 0x80;
-//	txBuf[1] = 0x42;
-//	for(uint8_t i = 2; i < 21; i++) txBuf[i] = 0x00; 
-//	HAL_SPI_TransmitReceive(&hspi1, txBuf, rxBuf, 21, 200);
+
 //  /* Infinite loop */
 	float rotate_time = 10;
-		myQueue01Handle = xQueueCreate( 8, sizeof( uint8_t ) );
-		uint8_t toSend;
   for(;;)
   {
 		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_RESET);
  		HAL_SPI_TransmitReceive(&hspi1, txBuf, rxBuf, 1, 200);
 		for (int i = 0; i<100;i++);
-//		HAL_UART_Transmit(&huart2, rxBuf, 1, 200);
 		HAL_SPI_TransmitReceive(&hspi1, txBuf+1, rxBuf+1, 1, 200);
 		for (int i = 0; i<100;i++);
-//		HAL_UART_Transmit(&huart2, rxBuf, 1, 200);
 		HAL_SPI_TransmitReceive(&hspi1, txBuf+2, rxBuf+2, 1, 200);
 		for (int i = 0; i<100;i++);
-//		HAL_UART_Transmit(&huart2, rxBuf, 1, 200);
 		HAL_SPI_TransmitReceive(&hspi1, txBuf+3, rxBuf+3, 1, 200);
 		for (int i = 0; i<100;i++);
-//		HAL_UART_Transmit(&huart2, rxBuf, 1, 200);
 		HAL_SPI_TransmitReceive(&hspi1, txBuf+4, rxBuf+4, 1, 200);
-//		HAL_UART_Transmit(&huart3, rxBuf, 21, 200);
 		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-		HAL_UART_Transmit(&huart2, rxBuf, 5, 200);
+//	HAL_UART_Transmit(&huart2, rxBuf, 5, 200);
 		
-		//Rotating
+		osMessageQueuePut(myQueue01Handle, &rxBuf[4], 0, 100); // delay ???
+		// Start - Stop
+//		if((rxBuf[4]  == 0xEF) || (rxBuf[4]  == 0xBF)){
+//			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+//			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+//			if(rxBuf[4]  == 0xEF){   // X button
+//				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+//			}
+//			else{ // Triangular
+//				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+//			}
+//		}
+//	
+		if((rxBuf[4]  == 0xDF) || (rxBuf[4]  == 0x7F)) {    			// START_MOOVING 
+			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+			if(rxBuf[4]  == 0xDF){  // Circle
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
+			//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+			}
+			else{  //Square
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
+			//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+			}
+		}
+		else{
+			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+			rxBuf[4] = 0xFF;
+		}
 
-		//HAL_SPI_TransmitReceive(&hspi1, rxBuf, txBuf, sizeof(txBuf), 200);
-		if ( rxBuf[4] == 0xEF) {
-//		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-//		osDelay(rotate_time);
-			toSend = 0;
-	//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-			xQueueSend( myQueue01Handle, ( void * ) &toSend, portMAX_DELAY  );
+
+//-------------------------------------------------------------------
+//		// DIR
+//		if (rxBuf[4]  == 0xDF) {     															// DIR - RIGHT
+//			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);  // LED
+//		//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);  // DRV_DIR_Open_DRAIN not used
+//		}
+//		else	{                      															// DIR - LEFT
+//			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);    // LED
+//		//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);    // DRV_DIR_Open_DRAIN not used
+//		}		
+		/*
+		switch(rxBuf[4])
+		{
+			case 0xEF:
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);		// DIR - RIGHT
+			//	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+				break;
+			case 0xDF:
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);		// DIR - RIGHT
+			//	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+				break;
+			case 0xBF:
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);		// DIR - LEFT
+		//		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+				break;
+			case 0x7F:
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);		// DIR - LEFT
+			//	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+				break;
+			default:
+				
+				break;
 		}
-		else if( rxBuf[4] == 0x7F){
-			toSend = 1;
-	//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-				xQueueSend( myQueue01Handle, ( void * ) &toSend, portMAX_DELAY  );
-			
-		}
-			
+		*/
     osDelay(10);
-		
-		///Queue test
-	//	osMessagePut( myQueue01, , 100);
-	
-		
   }
 
   /* USER CODE END 5 */
@@ -585,32 +626,56 @@ void StartDefaultTask(void *argument)
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE ENfD Header_StartTask02 */
+/* USER CODE END Header_StartTask02 */
 void StartTask02(void *argument)
 {
   /* USER CODE BEGIN StartTask02 */
+	uint8_t data[2] = {0, 0};
   /* Infinite loop */
-	uint8_t rec;
   for(;;)
   {
-		xQueueReceive( myQueue01Handle, &( rec ), portMAX_DELAY ); 
+//		osMessageQueueGet(myQueue01Handle, data, 0, 100);
+//		if (data[0] != 0xFF) {
+//			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+//		}
+//		else {
+//			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+//		}
+		
+				osMessageQueueGet(myQueue01Handle, data, 0, 100);
+		if((data[0]  == 0xEF) || (data[0]  == 0xBF)){
+			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+			if(data[0]  == 0xEF){   // X button
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+			}
+			else{ // Triangular
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+			}
+		}
+	
+		
+		
+  }
+  /* USER CODE END StartTask02 */
+}
 
-		if (rec) 
-		{
-//		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-//		osDelay(rotate_time);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-			for (int i = 0; i<50;i++);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-			for (int i = 0; i<50;i++);
-			
-		}
-		else	{
-		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-		}
-		//osDelay(100);
-	}
-  /* USER CODE END StartTask02 */		
+/* USER CODE BEGIN Header_StartTask03 */
+/**
+* @brief Function implementing the myTask03 thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTask03 */
+void StartTask03(void *argument)
+{
+  /* USER CODE BEGIN StartTask03 */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartTask03 */
 }
 
 /* Callback01 function */

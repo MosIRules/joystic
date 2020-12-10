@@ -37,6 +37,3 @@ spi_joystick\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable
 spi_joystick\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
 spi_joystick\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3/portmacro.h
 spi_joystick\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
-spi_joystick\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
-spi_joystick\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
-spi_joystick\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h
