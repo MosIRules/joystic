@@ -463,12 +463,12 @@ ARM Macro Assembler    Page 8
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
 ork --depend=spi_joystick\startup_stm32f103xb.d -ospi_joystick\startup_stm32f10
-3xb.o -I..\Core\Inc -I.\RTE\_spi_joystick -IC:\Users\Андрей\AppData\Local\Arm\P
-acks\ARM\CMSIS\5.7.0\CMSIS\Core\Include -IC:\Users\Андрей\AppData\Local\Arm\Pac
-ks\Keil\STM32F1xx_DFP\2.3.0\Device\Include --predefine="__MICROLIB SETA 1" --pr
-edefine="__UVISION_VERSION SETA 532" --predefine="_RTE_ SETA 1" --predefine="ST
-M32F10X_MD SETA 1" --predefine="_RTE_ SETA 1" --list=startup_stm32f103xb.lst st
-artup_stm32f103xb.s
+3xb.o -I..\Core\Inc -I.\RTE\_spi_joystick -IC:\Users\User\AppData\Local\Arm\Pac
+ks\ARM\CMSIS\5.7.0\CMSIS\Core\Include -IC:\Users\User\AppData\Local\Arm\Packs\K
+eil\STM32F1xx_DFP\2.3.0\Device\Include --predefine="__EVAL SETA 1" --predefine=
+"__MICROLIB SETA 1" --predefine="__UVISION_VERSION SETA 532" --predefine="_RTE_
+ SETA 1" --predefine="STM32F10X_MD SETA 1" --predefine="_RTE_ SETA 1" --list=st
+artup_stm32f103xb.lst startup_stm32f103xb.s
 
 
 
@@ -1175,4 +1175,4 @@ Symbol: __main
       At line 135 in file startup_stm32f103xb.s
 Comment: __main used once
 2 symbols
-406 symbols in table
+407 symbols in table

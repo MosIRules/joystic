@@ -366,9 +366,9 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 35;
+  htim3.Init.Prescaler = 719;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 99;
+  htim3.Init.Period = 1999;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
@@ -382,7 +382,7 @@ static void MX_TIM3_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 1;
+  sConfigOC.Pulse = 50;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
@@ -522,6 +522,9 @@ void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* USER CODE BEGIN StartDefaultTask */
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); // Servo_1 Timer Start
+	TIM3->CCR1 = 50;
+	
 	uint8_t txBuf[21];
 	uint8_t rxBuf[21];
 	
@@ -546,7 +549,7 @@ void StartDefaultTask(void *argument)
 		for (int i = 0; i<100;i++);
 		HAL_SPI_TransmitReceive(&hspi1, txBuf+4, rxBuf+4, 1, 200);
 		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-//	HAL_UART_Transmit(&huart2, rxBuf, 5, 200);
+  	HAL_UART_Transmit(&huart2, rxBuf, 5, 200);
 		
 		osMessageQueuePut(myQueue01Handle, &rxBuf[4], 0, 100); // delay ???
 		// Start - Stop
@@ -561,10 +564,10 @@ void StartDefaultTask(void *argument)
 //			}
 //		}
 //	
-		if((rxBuf[4]  == 0xDF) || (rxBuf[4]  == 0x7F)) {    			// START_MOOVING 
+		if(((rxBuf[4] & 0x20)  == 0) || ((rxBuf[4] & 0x80)  == 0)) {    			// START_MOOVING 
 			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
-			if(rxBuf[4]  == 0xDF){  // Circle
+			if((rxBuf[4] & 0x20)  == 0){  // Circle
 				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
 			//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 			}
@@ -576,7 +579,17 @@ void StartDefaultTask(void *argument)
 		else{
 			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
 			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-			rxBuf[4] = 0xFF;
+		}
+		if(((rxBuf[4] & 0x02) == 0) || ((rxBuf[4] & 0x08) == 0)){
+			if ((rxBuf[4] & 0x02) == 0){ // R2 button
+				TIM3->CCR1 = 50; // Servo_1 0 grad
+			}
+			else{ // R1 button
+				TIM3->CCR1 = 250; // Servo_1 180 grad
+			}
+		}
+		else{
+			// NO R1||R2
 		}
 
 
