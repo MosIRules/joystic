@@ -19,7 +19,6 @@
 "spi_joystick\stm32f1xx_hal_spi.o"
 "spi_joystick\stm32f1xx_hal_tim.o"
 "spi_joystick\stm32f1xx_hal_tim_ex.o"
-"spi_joystick\stm32f1xx_hal_uart.o"
 "spi_joystick\system_stm32f1xx.o"
 "spi_joystick\croutine.o"
 "spi_joystick\event_groups.o"

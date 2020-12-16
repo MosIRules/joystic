@@ -47,10 +47,7 @@ DMA_HandleTypeDef hdma_spi1_tx;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
-
-UART_HandleTypeDef huart2;
-DMA_HandleTypeDef hdma_usart2_rx;
-DMA_HandleTypeDef hdma_usart2_tx;
+TIM_HandleTypeDef htim4;
 
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -66,13 +63,6 @@ const osThreadAttr_t myTask02_attributes = {
   .priority = (osPriority_t) osPriorityLow,
   .stack_size = 256 * 4
 };
-/* Definitions for myTask03 */
-osThreadId_t myTask03Handle;
-const osThreadAttr_t myTask03_attributes = {
-  .name = "myTask03",
-  .priority = (osPriority_t) osPriorityLow,
-  .stack_size = 256 * 4
-};
 /* Definitions for myQueue01 */
 osMessageQueueId_t myQueue01Handle;
 const osMessageQueueAttr_t myQueue01_attributes = {
@@ -82,11 +72,6 @@ const osMessageQueueAttr_t myQueue01_attributes = {
 osMessageQueueId_t myQueueDataHandle;
 const osMessageQueueAttr_t myQueueData_attributes = {
   .name = "myQueueData"
-};
-/* Definitions for myQueue03 */
-osMessageQueueId_t myQueue03Handle;
-const osMessageQueueAttr_t myQueue03_attributes = {
-  .name = "myQueue03"
 };
 /* Definitions for myTimer01 */
 osTimerId_t myTimer01Handle;
@@ -102,12 +87,11 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
-static void MX_USART2_UART_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_TIM4_Init(void);
 void StartDefaultTask(void *argument);
 void StartTask02(void *argument);
-void StartTask03(void *argument);
 void Callback01(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -149,9 +133,9 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_SPI1_Init();
-  MX_USART2_UART_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);
   /* USER CODE END 2 */
@@ -182,9 +166,6 @@ int main(void)
   /* creation of myQueueData */
   myQueueDataHandle = osMessageQueueNew (16, sizeof(uint16_t), &myQueueData_attributes);
 
-  /* creation of myQueue03 */
-  myQueue03Handle = osMessageQueueNew (16, sizeof(uint16_t), &myQueue03_attributes);
-
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -195,9 +176,6 @@ int main(void)
 
   /* creation of myTask02 */
   myTask02Handle = osThreadNew(StartTask02, NULL, &myTask02_attributes);
-
-  /* creation of myTask03 */
-  myTask03Handle = osThreadNew(StartTask03, NULL, &myTask03_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -397,35 +375,51 @@ static void MX_TIM3_Init(void)
 }
 
 /**
-  * @brief USART2 Initialization Function
+  * @brief TIM4 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART2_UART_Init(void)
+static void MX_TIM4_Init(void)
 {
 
-  /* USER CODE BEGIN USART2_Init 0 */
+  /* USER CODE BEGIN TIM4_Init 0 */
 
-  /* USER CODE END USART2_Init 0 */
+  /* USER CODE END TIM4_Init 0 */
 
-  /* USER CODE BEGIN USART2_Init 1 */
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
 
-  /* USER CODE END USART2_Init 1 */
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
+  /* USER CODE BEGIN TIM4_Init 1 */
+
+  /* USER CODE END TIM4_Init 1 */
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 719;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 1999;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART2_Init 2 */
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 50;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM4_Init 2 */
 
-  /* USER CODE END USART2_Init 2 */
+  /* USER CODE END TIM4_Init 2 */
+  HAL_TIM_MspPostInit(&htim4);
 
 }
 
@@ -445,12 +439,6 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel3_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
-  /* DMA1_Channel6_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel6_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel6_IRQn);
-  /* DMA1_Channel7_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
 
 }
 
@@ -533,6 +521,8 @@ void StartDefaultTask(void *argument)
 	txBuf[2] = 0x00;
 	txBuf[3] = 0xFF;
 	txBuf[4] = 0xFF;	
+	TIM2->ARR = 2999;
+	TIM4->ARR = 2999;
 
 //  /* Infinite loop */
 	float rotate_time = 10;
@@ -549,7 +539,7 @@ void StartDefaultTask(void *argument)
 		for (int i = 0; i<100;i++);
 		HAL_SPI_TransmitReceive(&hspi1, txBuf+4, rxBuf+4, 1, 200);
 		HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
-  	HAL_UART_Transmit(&huart2, rxBuf, 5, 200);
+///  	HAL_UART_Transmit(&huart2, rxBuf, 5, 200);
 		
 		osMessageQueuePut(myQueue01Handle, &rxBuf[4], 0, 100); // delay ???
 		// Start - Stop
@@ -566,7 +556,7 @@ void StartDefaultTask(void *argument)
 //	
 		if(((rxBuf[4] & 0x20)  == 0) || ((rxBuf[4] & 0x80)  == 0)) {    			// START_MOOVING 
 			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+		//	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
 			if((rxBuf[4] & 0x20)  == 0){  // Circle
 				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
 			//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
@@ -577,8 +567,9 @@ void StartDefaultTask(void *argument)
 			}
 		}
 		else{
-			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
-			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+		//	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+		  HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+		//	HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
 		}
 		if(((rxBuf[4] & 0x02) == 0) || ((rxBuf[4] & 0x08) == 0)){
 			if ((rxBuf[4] & 0x02) == 0){ // R2 button
@@ -646,49 +637,26 @@ void StartTask02(void *argument)
 	uint8_t data[2] = {0, 0};
   /* Infinite loop */
   for(;;)
-  {
-//		osMessageQueueGet(myQueue01Handle, data, 0, 100);
-//		if (data[0] != 0xFF) {
-//			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-//		}
-//		else {
-//			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-//		}
-		
+	{		
 				osMessageQueueGet(myQueue01Handle, data, 0, 100);
-		if((data[0]  == 0xEF) || (data[0]  == 0xBF)){
-			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-			if(data[0]  == 0xEF){   // X button
+		if(((data[0] & 0x10 ) == 0) || ((data[0] & 0x40 ) == 0)){
+			HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+		//	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+			if((data[0] & 0x10 ) == 0){   // X button
 				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 			}
 			else{ // Triangular
 				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
 			}
 		}
-	
-		
+		else{
+		//	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
+		// HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
+		}
 		
   }
   /* USER CODE END StartTask02 */
-}
-
-/* USER CODE BEGIN Header_StartTask03 */
-/**
-* @brief Function implementing the myTask03 thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask03 */
-void StartTask03(void *argument)
-{
-  /* USER CODE BEGIN StartTask03 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask03 */
 }
 
 /* Callback01 function */

@@ -466,9 +466,9 @@ ork --depend=spi_joystick\startup_stm32f103xb.d -ospi_joystick\startup_stm32f10
 3xb.o -I..\Core\Inc -I.\RTE\_spi_joystick -IC:\Users\User\AppData\Local\Arm\Pac
 ks\ARM\CMSIS\5.7.0\CMSIS\Core\Include -IC:\Users\User\AppData\Local\Arm\Packs\K
 eil\STM32F1xx_DFP\2.3.0\Device\Include --predefine="__EVAL SETA 1" --predefine=
-"__MICROLIB SETA 1" --predefine="__UVISION_VERSION SETA 532" --predefine="_RTE_
- SETA 1" --predefine="STM32F10X_MD SETA 1" --predefine="_RTE_ SETA 1" --list=st
-artup_stm32f103xb.lst startup_stm32f103xb.s
+"__MICROLIB SETA 1" --predefine="__UVISION_VERSION SETA 527" --predefine="_RTE_
+ SETA 1" --predefine="STM32F10X_MD SETA 1" --list=startup_stm32f103xb.lst start
+up_stm32f103xb.s
 
 
 
