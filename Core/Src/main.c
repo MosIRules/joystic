@@ -395,7 +395,7 @@ static void MX_TIM4_Init(void)
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = 719;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 1999;
+  htim4.Init.Period = 999;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
@@ -520,9 +520,11 @@ void StartDefaultTask(void *argument)
 	txBuf[1] = 0x42;
 	txBuf[2] = 0x00;
 	txBuf[3] = 0xFF;
-	txBuf[4] = 0xFF;	
+	txBuf[4] = 0xFF;
+
+////Motor speed	
 	TIM2->ARR = 2999;
-	TIM4->ARR = 2999;
+//	TIM4->ARR = 2999;
 
 //  /* Infinite loop */
 	float rotate_time = 10;
@@ -542,35 +544,34 @@ void StartDefaultTask(void *argument)
 ///  	HAL_UART_Transmit(&huart2, rxBuf, 5, 200);
 		
 		osMessageQueuePut(myQueue01Handle, &rxBuf[4], 0, 100); // delay ???
-		// Start - Stop
-//		if((rxBuf[4]  == 0xEF) || (rxBuf[4]  == 0xBF)){
-//			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-//			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-//			if(rxBuf[4]  == 0xEF){   // X button
-//				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-//			}
-//			else{ // Triangular
-//				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-//			}
-//		}
-//	
+
 		if(((rxBuf[4] & 0x20)  == 0) || ((rxBuf[4] & 0x80)  == 0)) {    			// START_MOOVING 
 			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-		//	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
 			if((rxBuf[4] & 0x20)  == 0){  // Circle
 				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
-			//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 			}
 			else{  //Square
 				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
-			//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
 			}
 		}
 		else{
-		//	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
 		  HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-		//	HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
 		}
+
+		
+		if(((rxBuf[4] & 0x10)  == 0) || ((rxBuf[4] & 0x40)  == 0)) {
+			HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+			if((rxBuf[4] & 0x10 ) == 0){   // X button
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+			}
+			else{ // Triangular
+				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+			}
+		}
+		else{
+			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
+		}
+		
 		if(((rxBuf[4] & 0x02) == 0) || ((rxBuf[4] & 0x08) == 0)){
 			if ((rxBuf[4] & 0x02) == 0){ // R2 button
 				TIM3->CCR1 = 50; // Servo_1 0 grad
@@ -638,7 +639,7 @@ void StartTask02(void *argument)
   /* Infinite loop */
   for(;;)
 	{		
-				osMessageQueueGet(myQueue01Handle, data, 0, 100);
+		osMessageQueueGet(myQueue01Handle, data, 0, 100);
 		if(((data[0] & 0x10 ) == 0) || ((data[0] & 0x40 ) == 0)){
 			HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
 		//	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
@@ -650,8 +651,6 @@ void StartTask02(void *argument)
 			}
 		}
 		else{
-		//	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
-		// HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
 			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
 		}
 		
