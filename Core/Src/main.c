@@ -367,6 +367,11 @@ static void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
+  sConfigOC.Pulse = 0;
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
@@ -395,7 +400,7 @@ static void MX_TIM4_Init(void)
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = 719;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 999;
+  htim4.Init.Period = 1999;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
@@ -434,10 +439,10 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Channel2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
   /* DMA1_Channel3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
 
 }
@@ -511,7 +516,11 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN 5 */
   /* USER CODE BEGIN StartDefaultTask */
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); // Servo_1 Timer Start
-	TIM3->CCR1 = 50;
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2); // Servo_1 Timer Start
+	
+	uint8_t srv_1_pulse = 50;
+	uint8_t srv_2_pulse = 50;
+	uint8_t srv_disc = 1;
 	
 	uint8_t txBuf[21];
 	uint8_t rxBuf[21];
@@ -559,29 +568,51 @@ void StartDefaultTask(void *argument)
 		}
 
 		
-		if(((rxBuf[4] & 0x10)  == 0) || ((rxBuf[4] & 0x40)  == 0)) {
-			HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
-			if((rxBuf[4] & 0x10 ) == 0){   // X button
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+//		if(((rxBuf[4] & 0x10)  == 0) || ((rxBuf[4] & 0x40)  == 0)) {
+//			HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+//			if((rxBuf[4] & 0x10 ) == 0){   // X button
+//				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+//			}
+//			else{ // Triangular
+//				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+//			}
+//		}
+//		else{
+//			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
+//		}
+		
+		if(((rxBuf[3] & 0x80) == 0) || ((rxBuf[3] & 0x20) == 0)){
+			if ((rxBuf[3] & 0x80) == 0){ // left_arrow button
+				if ((srv_1_pulse >= 50) & (srv_1_pulse <= (250 - srv_disc))){
+					srv_1_pulse = srv_1_pulse + srv_disc;
+				}
 			}
-			else{ // Triangular
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+			else{ // right_arrow button
+				 if ((srv_1_pulse >= (50 + srv_disc)) & (srv_1_pulse <= 250)){
+					srv_1_pulse = srv_1_pulse - srv_disc;
+				};
 			}
+			TIM3->CCR1 = srv_1_pulse;
 		}
 		else{
-			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
+			// NO right||left arrow button
 		}
 		
-		if(((rxBuf[4] & 0x02) == 0) || ((rxBuf[4] & 0x08) == 0)){
-			if ((rxBuf[4] & 0x02) == 0){ // R2 button
-				TIM3->CCR1 = 50; // Servo_1 0 grad
+		if(((rxBuf[3] & 0x10) == 0) || ((rxBuf[3] & 0x40) == 0)){
+			if ((rxBuf[3] & 0x10) == 0){ // up_arrow button
+				if ((srv_2_pulse >= 50) & (srv_2_pulse <= (250 - srv_disc))){
+					srv_2_pulse = srv_2_pulse + srv_disc;
+				}
 			}
-			else{ // R1 button
-				TIM3->CCR1 = 250; // Servo_1 180 grad
+			else{ // down_arrow button
+				 if ((srv_1_pulse >= (50 + srv_disc)) & (srv_1_pulse <= 250)){
+					srv_2_pulse = srv_2_pulse - srv_disc;
+				};
 			}
+			TIM3->CCR2 = srv_2_pulse;
 		}
 		else{
-			// NO R1||R2
+			// NO up||down arrow button
 		}
 
 
