@@ -99,6 +99,8 @@ void StartTask02(void *argument);
 void Callback01(void *argument);
 
 /* USER CODE BEGIN PFP */
+
+
 void joysticTransmition(int k, uint8_t* txBuf)
 {
 	uint8_t rxBuf[1];
@@ -138,6 +140,9 @@ void joysticTrRs(int k, uint8_t* txBuf, uint8_t* rxBuf)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+	
+
+
 
   /* USER CODE END 1 */
 
@@ -611,6 +616,9 @@ void StartDefaultTask(void *argument)
 	uint8_t S1 = 0;
 	uint8_t S2 = 0;
 	uint8_t S3 = 0;
+
+//	uint16_t adc_val[2] = {0,0};
+//	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_val, 2);
 	
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); // Servo_1 Timer Start
 	TIM3->CCR1 = 250;
@@ -621,9 +629,9 @@ void StartDefaultTask(void *argument)
 	
 	uint8_t bufSize = 21;
 	
-	uint8_t txAnalogBuf[21] = {0x01, 0x42, 0x00, 0xFF, 0xFF,
-											 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-											 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+	uint8_t txAnalogBuf[21] = {0x01, 0x42, 0x00, 0x00, 0x00,
+														 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+														 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 	uint8_t rxBuf[21];
 	
 //	uint8_t tx3Buf[41]={0x01, 0x43, 0x00, 0x01, 0x00,
@@ -640,6 +648,10 @@ void StartDefaultTask(void *argument)
 	uint8_t tx8Buf[9] = {0x01, 0x43, 0x00, 0x00, 0x5A, 0x5A, 0x5A, 0x5A, 0x5A};											
 											
 											///////////////////////////////////////////////////////
+	
+	uint8_t txVibroBuf[21] = {0x01, 0x42, 0x00, 0x48, 0xFF,
+													 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+													 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 											
 	uint8_t txBuf[5] = {0x01, 0x42, 0x00, 0xFF, 0xFF};
 
@@ -664,7 +676,7 @@ void StartDefaultTask(void *argument)
   {
 		
 	  ///config into analog mode
-		joysticTrRs( 5, txAnalogBuf, rxBuf);
+		joysticTrRs( 21, txAnalogBuf, rxBuf);
 		
 		osMessageQueuePut(myQueue01Handle, &rxBuf[4], 0, 100); // delay ???
 			
@@ -677,6 +689,14 @@ void StartDefaultTask(void *argument)
 			}
 			else{  //Square
 				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
+				//vibration
+			//	joysticTransmition( 5, txVibroBuf);
+			//		joysticTrRs( 21, txVibroBuf, rxBuf);
+		//		txAnalogBuf[4] = 0x48;
+		//		txAnalogBuf[5] = 0xFF;
+				joysticTrRs( 21, txAnalogBuf, rxBuf);
+				joysticTrRs( 21, txVibroBuf, rxBuf);
+				
 			}
 		}
 		else{
@@ -694,10 +714,6 @@ void StartDefaultTask(void *argument)
 		else{
 			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
 		}
-		/////////////////////////////////////////////////////////////////////////////////
-		//   vibration motors
-		//	joysticTransmition( 41, tx2Buf);
-		/////////////////////////////////////////////////////////////////////////////////////////
 
 		///////////////Servo1
 		if(((rxBuf[3] & 0x80) == 0) || ((rxBuf[3] & 0x20) == 0)){
@@ -746,43 +762,7 @@ void StartDefaultTask(void *argument)
 		else{
 			// NO R2||L2 buttons
 		}
-
-
-
-//-------------------------------------------------------------------
-//		// DIR
-//		if (rxBuf[4]  == 0xDF) {     															// DIR - RIGHT
-//			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);  // LED
-//		//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);  // DRV_DIR_Open_DRAIN not used
-//		}
-//		else	{                      															// DIR - LEFT
-//			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);    // LED
-//		//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);    // DRV_DIR_Open_DRAIN not used
-//		}		
-		/*
-		switch(rxBuf[4])
-		{
-			case 0xEF:
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);		// DIR - RIGHT
-			//	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-				break;
-			case 0xDF:
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);		// DIR - RIGHT
-			//	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-				break;
-			case 0xBF:
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);		// DIR - LEFT
-		//		HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_1);
-				break;
-			case 0x7F:
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);		// DIR - LEFT
-			//	HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-				break;
-			default:
-				
-				break;
-		}
-		*/
+		
     osDelay(10);
   }
 
