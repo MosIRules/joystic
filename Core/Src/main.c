@@ -616,6 +616,7 @@ void StartDefaultTask(void *argument)
 	uint8_t S1 = 0;
 	uint8_t S2 = 0;
 	uint8_t S3 = 0;
+	uint8_t dS = 7;
 
 //	uint16_t adc_val[2] = {0,0};
 //	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_val, 2);
@@ -690,10 +691,6 @@ void StartDefaultTask(void *argument)
 			else{  //Square
 				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
 				//vibration
-			//	joysticTransmition( 5, txVibroBuf);
-			//		joysticTrRs( 21, txVibroBuf, rxBuf);
-		//		txAnalogBuf[4] = 0x48;
-		//		txAnalogBuf[5] = 0xFF;
 				joysticTrRs( 21, txAnalogBuf, rxBuf);
 				joysticTrRs( 21, txVibroBuf, rxBuf);
 				
@@ -715,17 +712,29 @@ void StartDefaultTask(void *argument)
 			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
 		}
 
+//		///////////////Servo delta
+//		if((rxBuf[4] & 0x10 ) == 0){
+//			if(dS == 50){
+//			dS = 0;
+//			}
+//			dS = dS + 10;
+//			if(dS > 50){
+//				dS = 50;
+//			}
+//				osDelay(500);
+//		}
 		///////////////Servo1
 		if(((rxBuf[3] & 0x80) == 0) || ((rxBuf[3] & 0x20) == 0)){
 			if ((rxBuf[3] & 0x80) == 0){ // LEFT button
-				S1 = S1 - 1;
+				S1 = S1 - dS;
 			}
 			else{ // RIGHT button
-				S1 = S1 + 1;
+				S1 = S1 + dS;
 			}
 			if ( S1 > 200){S1 = 200;}
 			if ( S1 < 1){S1 = 1;}
 			TIM3->CCR1 = 50 + S1;
+			osDelay(300);
 		}
 		else{
 			// NO UP||DOWN buttons
@@ -734,14 +743,15 @@ void StartDefaultTask(void *argument)
 		///////////////Servo2
 		if(((rxBuf[3] & 0x10) == 0) || ((rxBuf[3] & 0x40) == 0)){
 			if ((rxBuf[3] & 0x10) == 0){ // DOWN button
-				S2 = S2 - 1;
+				S2 = S2 - dS;
 			}
 			else{ // UP button
-				S2 = S2 + 1;
+				S2 = S2 + dS;
 			}
 			if ( S2 > 200){S2 = 200;}
 			if ( S2 < 1){S2 = 1;}
 			TIM3->CCR2 = 50 + S2;
+			osDelay(300);
 		}
 		else{
 			// NO UP||DOWN buttons
@@ -750,10 +760,10 @@ void StartDefaultTask(void *argument)
 		///////////////Servo3
 		if(((rxBuf[4] & 0x01) == 0) || ((rxBuf[4] & 0x04) == 0)){
 			if ((rxBuf[4] & 0x01) == 0){ // L2 button
-				S3 = S3 - 1;
+				S3 = S3 - dS;
 			}
 			else{ // R2 button
-				S3 = S3 + 1;
+				S3 = S3 + dS;
 			}
 			if ( S3 > 200){S3 = 200;}
 			if ( S3 < 1){S3 = 1;}
