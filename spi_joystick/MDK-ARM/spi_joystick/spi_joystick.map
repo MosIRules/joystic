@@ -2573,34 +2573,34 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
 
-       652         46          0          4       1720      17223   cmsis_os2.o
-         0          0          0          0          0      20160   event_groups.o
-         0          0          0          0          0       2640   freertos.o
-       460         24          0         24      15360       4659   heap_4.o
-       138          0          0          0          0       3382   list.o
-      1222         66        112         12        424     441178   main.o
-       662         70          0         12          0      10793   port.o
-      1584         20          0          0         64      17918   queue.o
+       652         46          0          4       1720      17311   cmsis_os2.o
+         0          0          0          0          0      20184   event_groups.o
+         0          0          0          0          0       2648   freertos.o
+       460         24          0         24      15360       4691   heap_4.o
+       138          0          0          0          0       3414   list.o
+      1222         66        112         12        424     441342   main.o
+       662         70          0         12          0      10857   port.o
+      1584         20          0          0         64      18018   queue.o
         36          8        236          0       1024        800   startup_stm32f103xb.o
-        64         14          0         12          0       4630   stm32f1xx_hal.o
-       158         14          0          0          0      28170   stm32f1xx_hal_cortex.o
-       584         36          0          0          0       2711   stm32f1xx_hal_dma.o
-       490         34          0          0          0       2880   stm32f1xx_hal_gpio.o
-       504         58          0          0          0       2637   stm32f1xx_hal_msp.o
-      1336        110          0          0          0       5805   stm32f1xx_hal_rcc.o
-      1028          4          0          0          0       6558   stm32f1xx_hal_spi.o
-       564         14          0          0          0       6896   stm32f1xx_hal_tim.o
-         4          0          0          0          0       1541   stm32f1xx_hal_tim_ex.o
-       116         18          0          0         64       1411   stm32f1xx_hal_timebase_tim.o
-       852         12          0          0          0       7035   stm32f1xx_hal_uart.o
-        96         42          0          0          0       5660   stm32f1xx_it.o
-         0          0          0          0          0       8892   stream_buffer.o
-        72         16         24          4          0       1171   system_stm32f1xx.o
-      2064        170          0         60       1220      23180   tasks.o
-      1114         82          0         20        280      29767   timers.o
+        64         14          0         12          0       4662   stm32f1xx_hal.o
+       158         14          0          0          0      28198   stm32f1xx_hal_cortex.o
+       584         36          0          0          0       2735   stm32f1xx_hal_dma.o
+       490         34          0          0          0       2904   stm32f1xx_hal_gpio.o
+       504         58          0          0          0       2661   stm32f1xx_hal_msp.o
+      1336        110          0          0          0       5841   stm32f1xx_hal_rcc.o
+      1028          4          0          0          0       6610   stm32f1xx_hal_spi.o
+       564         14          0          0          0       6952   stm32f1xx_hal_tim.o
+         4          0          0          0          0       1561   stm32f1xx_hal_tim_ex.o
+       116         18          0          0         64       1431   stm32f1xx_hal_timebase_tim.o
+       852         12          0          0          0       7111   stm32f1xx_hal_uart.o
+        96         42          0          0          0       5728   stm32f1xx_it.o
+         0          0          0          0          0       8896   stream_buffer.o
+        72         16         24          4          0       1195   system_stm32f1xx.o
+      2064        170          0         60       1220      23324   tasks.o
+      1114         82          0         20        280      29871   timers.o
 
     ----------------------------------------------------------------------
-     13830        858        404        148      20156     657697   Object Totals
+     13830        858        404        148      20156     658945   Object Totals
          0          0         32          0          0          0   (incl. Generated)
         30          0          0          0          0          0   (incl. Padding)
 
@@ -2641,8 +2641,8 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-     13988        874        404        148      20156     650657   Grand Totals
-     13988        874        404        148      20156     650657   ELF Image Totals
+     13988        874        404        148      20156     651905   Grand Totals
+     13988        874        404        148      20156     651905   ELF Image Totals
      13988        874        404        148          0          0   ROM Totals
 
 ==============================================================================
