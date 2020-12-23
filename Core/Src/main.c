@@ -309,13 +309,14 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_2;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
   }
   /** Configure Regular Channel
   */
+  sConfig.Channel = ADC_CHANNEL_3;
   sConfig.Rank = ADC_REGULAR_RANK_2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
@@ -618,8 +619,8 @@ void StartDefaultTask(void *argument)
 	uint8_t S3 = 0;
 	uint8_t dS = 7;
 
-//	uint16_t adc_val[2] = {0,0};
-//	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_val, 2);
+	uint16_t adc_val[2] = {0,0};
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_val, 2);
 	
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); // Servo_1 Timer Start
 	TIM3->CCR1 = 250;
@@ -772,8 +773,9 @@ void StartDefaultTask(void *argument)
 		else{
 			// NO R2||L2 buttons
 		}
-		
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
     osDelay(10);
+		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);		
   }
 
 
