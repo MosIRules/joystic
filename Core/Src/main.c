@@ -126,6 +126,40 @@ void joysticTrRs(int k, uint8_t* txBuf, uint8_t* rxBuf)
 	
 	HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
 }
+
+#define FLASH_TYPEPROGRAMDATA_BYTE         (0x00U)  // ???????? 1 ????
+#define FLASH_TYPEPROGRAMDATA_HALFWORD     (0x01U)  // ???????? 2 ?????
+#define FLASH_TYPEPROGRAMDATA_WORD         (0x02U)  // ???????? 4 ?????
+#define FLASH_TYPEPROGRAMDATA_FASTBYTE     (0x04U)  // ?????? ???????? 1 ????
+#define FLASH_TYPEPROGRAMDATA_FASTHALFWORD (0x08U)  // ?????? ???????? 2 ?????
+#define FLASH_TYPEPROGRAMDATA_FASTWORD     (0x10U)  // ?????? ???????? 4 ?????
+#define FLASH_TYPEERASEDATA_BYTE         (0x00U)  // ??????? ????
+#define FLASH_TYPEERASEDATA_HALFWORD     (0x01U)  // ??????? 2 ?????
+#define FLASH_TYPEERASEDATA_WORD         (0x02U)  // ??????? 4 ?????
+
+//void writeToEEPROM (uint32_t address, uint32_t value)
+//{
+//  HAL_StatusTypeDef flash_ok = HAL_ERROR;
+//  while (flash_ok != HAL_OK)
+//  {
+//    flash_ok = HAL_FLASHEx_DATAEEPROM_Unlock();
+//  }
+//  flash_ok = HAL_ERROR;
+//  while (flash_ok != HAL_OK)
+//  {
+//    flash_ok = HAL_FLASHEx_DATAEEPROM_Erase (FLASH_TYPEERASEDATA_WORD, address);
+//  }
+//  flash_ok = HAL_ERROR;
+//  while (flash_ok != HAL_OK)
+//  {
+//    flash_ok = HAL_FLASHEx_DATAEEPROM_Program (FLASH_TYPEPROGRAMDATA_WORD, address, value);
+//  }
+//  flash_ok = HAL_ERROR;
+//  while (flash_ok != HAL_OK)
+//  {
+//    flash_ok = HAL_FLASHEx_DATAEEPROM_Lock ();
+//  }
+//}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -591,7 +625,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+uint16_t adc_val[2] = {0,0};
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -606,14 +640,25 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN 5 */
   /* USER CODE BEGIN StartDefaultTask */
 	/* USER CODE BEGIN StartDefaultTask */
-//servos data
+	//servos data
 	uint8_t S1 = 0;
 	uint8_t S2 = 0;
 	uint8_t S3 = 0;
 	uint8_t dS = 7;
-
-//	uint16_t adc_val[2] = {0,0};
-//	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_val, 2);
+	//encode data
+	
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_val, 2);
+	
+//	HAL_FLASH_Unlock();
+//	//encode max1
+//	uint16_t encodeMax1 = 50; 
+	
+	///trial memory
+	uint8_t mem = 0;
+	HAL_StatusTypeDef	flash_ok = HAL_ERROR;
+	
+	//encode max2
+	uint16_t encodeMax2 = 50;
 	
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); // Servo_1 Timer Start
 	TIM3->CCR1 = 250;
@@ -770,6 +815,21 @@ void StartDefaultTask(void *argument)
 			// NO R2||L2 buttons
 		}
 		
+//		//open memory
+//		while(flash_ok != HAL_OK){
+//			flash_ok = HAL_FLASH_Unlock();
+//		}
+//		flash_ok = HAL_ERROR;
+//		while(flash_ok != HAL_OK){
+////			flash_ok = HAL_FLASH_Program(TYPEPROGRAM_WORD, 0x08100000, 0x7777);
+//		}	
+//		//close memory
+//		flash_ok = HAL_ERROR;
+//		while(flash_ok != HAL_OK){
+//			flash_ok = HAL_FLASH_Lock();
+//		}
+		
+		///	configuration into analog mode
 		timer++;
 		if(timer >= 300)
 		{
