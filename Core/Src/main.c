@@ -723,36 +723,43 @@ void StartDefaultTask(void *argument)
 		
 		osMessageQueuePut(myQueue01Handle, &rxBuf[4], 0, 100); // delay ???
 			
+		//////////////////
+		//encode data(adc_val[1] > 2400) && (adc_val[1] < 4100))
+		//////////////////
+		
+		
 		// START_MOOVING motors
-
-		if(((rxBuf[4] & 0x20)  == 0) || ((rxBuf[4] & 0x80)  == 0)) {    		
-			HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-			if((rxBuf[4] & 0x20)  == 0){  // Circle
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
+	//	if((adc_val[0] - 0xB72 < 0) && (adc_val[0] - 0x6C2 < 0)){
+			if(((rxBuf[4] & 0x20)  == 0) || ((rxBuf[4] & 0x80)  == 0)) {    		
+				HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+				if((rxBuf[4] & 0x20)  == 0){  // Circle
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
+				}
+				else{  //Square
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
+					//vibration
+					joysticTrRs( 21, txAnalogBuf, rxBuf);
+					joysticTrRs( 21, txVibroBuf, rxBuf);
+					
+				}
 			}
-			else{  //Square
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
-				//vibration
-				joysticTrRs( 21, txAnalogBuf, rxBuf);
-				joysticTrRs( 21, txVibroBuf, rxBuf);
-				
+			else{
+				HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+			}		
+	//	}
+			if(((rxBuf[4] & 0x10)  == 0) || ((rxBuf[4] & 0x40)  == 0)) {
+				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+				if((rxBuf[4] & 0x10 ) == 0){   // X button
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+				}
+				else{ // Triangular
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+				}
 			}
-		}
-		else{
-		  HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-		}		
-		if(((rxBuf[4] & 0x10)  == 0) || ((rxBuf[4] & 0x40)  == 0)) {
-			HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
-			if((rxBuf[4] & 0x10 ) == 0){   // X button
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+			else{
+				HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
 			}
-			else{ // Triangular
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-			}
-		}
-		else{
-			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
-		}
+	
 
 //		///////////////Servo delta
 //		if((rxBuf[4] & 0x10 ) == 0){
@@ -868,19 +875,21 @@ void StartTask02(void *argument)
   for(;;)
 	{	
 		osMessageQueueGet(myQueue01Handle, data, 0, 100);
-		if(((data[0] & 0x10 ) == 0) || ((data[0] & 0x40 ) == 0)){
-			HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
-			if((data[0] & 0x10 ) == 0){   // X button
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+	////	if((adc_val[1] > 2400) && (adc_val[1] < 4100) && (adc_val[0] < 2930) && (adc_val[0] > 1730)){
+//		if((adc_val[0] - 0xB72 < 0) && (adc_val[0] - 0x6C2 < 0)){
+			if(((data[0] & 0x10 ) == 0) || ((data[0] & 0x40 ) == 0)){
+				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+				if((data[0] & 0x10 ) == 0){   // X button
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+				}
+				else{ // Triangular
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+				}
 			}
-			else{ // Triangular
-				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+			else{
+				HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
 			}
-		}
-		else{
-			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
-		}
-		
+//		}
   }
 
 
