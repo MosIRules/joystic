@@ -747,9 +747,9 @@ void StartDefaultTask(void *argument)
 		// START_MOOVING motors
 	
 			if(((rxBuf[4] & 0x20)  == 0) || ((rxBuf[4] & 0x80)  == 0)) {    		
-				HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 				if((rxBuf[4] & 0x20)  == 0){  // Circle
 					if(adc_val_f[0] > adc_val_min0){
+						HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
 					}
 					else{
@@ -757,12 +757,12 @@ void StartDefaultTask(void *argument)
 						joysticTrRs( 21, txAnalogBuf, rxBuf);
 						joysticTrRs( 21, txVibroBuf, rxBuf);
 						joysticTrRs( 21, txVibroBuf, rxBuf);
-						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
 						HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
 					}
 				}
 				else{  //Square
 					if(adc_val_f[0] < adc_val_max0){
+						HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
 					}
 					else{
@@ -770,7 +770,6 @@ void StartDefaultTask(void *argument)
 						joysticTrRs( 21, txAnalogBuf, rxBuf);
 						joysticTrRs( 21, txVibroBuf, rxBuf);
 						joysticTrRs( 21, txVibroBuf, rxBuf);
-						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
 						HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
 					}
 				}
@@ -778,16 +777,18 @@ void StartDefaultTask(void *argument)
 			else{
 				HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
 			}		
-
+/////////////////////////////////////////////////////////////////////////////////////////
+			///2 motor
 //			if(((rxBuf[4] & 0x10)  == 0) || ((rxBuf[4] & 0x40)  == 0)) {
 //				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
-//				if((rxBuf[4] & 0x10 ) == 0){   // X button
+//				if((rxBuf[4] & 0x40 ) == 0){   // X button
 //					if(adc_val_f[1] < adc_val_max1){
 //						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 //					}
 //					else{
 //						//vibration
 //						joysticTrRs( 21, txAnalogBuf, rxBuf);
+//						joysticTrRs( 21, txVibroBuf, rxBuf);
 //						joysticTrRs( 21, txVibroBuf, rxBuf);
 //						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
 //						HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
@@ -801,7 +802,8 @@ void StartDefaultTask(void *argument)
 //						//vibration
 //						joysticTrRs( 21, txAnalogBuf, rxBuf);
 //						joysticTrRs( 21, txVibroBuf, rxBuf);
-//						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+//						joysticTrRs( 21, txVibroBuf, rxBuf);
+//						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
 //						HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
 //					}
 //				}
@@ -974,38 +976,32 @@ void StartTask02(void *argument)
 	{	
 		osMessageQueueGet(myQueue01Handle, data, 0, 100);
 			if(((data[0] & 0x10 ) == 0) || ((data[0] & 0x40 ) == 0)){
-				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
 				if((data[0] & 0x10 ) == 0){   // X button
-					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+					if(adc_val_f[1] < adc_val_max1){
+						HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+					}
+					else{
+						//vibration
+						joysticTrRs( 21, txAnalogBuf, rxBuf);
+						joysticTrRs( 21, txVibroBuf, rxBuf);
+						joysticTrRs( 21, txVibroBuf, rxBuf);
+						HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
+					}
 				}
 				else{ // Triangular
-					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+					if(adc_val_f[1] > adc_val_min1){
+						HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+					}
+					else{
+						//vibration
+						joysticTrRs( 21, txAnalogBuf, rxBuf);
+						joysticTrRs( 21, txVibroBuf, rxBuf);
+						joysticTrRs( 21, txVibroBuf, rxBuf);
+						HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
+					}
 				}
-				
-//				if((data[0] & 0x10 ) == 0){   // X button
-//					if(adc_val_f[1] < adc_val_max1){
-//						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-//					}
-//					else{
-//						//vibration
-//						joysticTrRs( 21, txAnalogBuf, rxBuf);
-//						joysticTrRs( 21, txVibroBuf, rxBuf);
-//						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-//						HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
-//					}
-//				}
-//				else{ // Triangular
-//					if(adc_val_f[1] > adc_val_min1){
-//						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-//					}
-//					else{
-//						//vibration
-//						joysticTrRs( 21, txAnalogBuf, rxBuf);
-//						joysticTrRs( 21, txVibroBuf, rxBuf);
-//						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-//						HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
-//					}
-//				}
 			}
 			else{
 				HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
