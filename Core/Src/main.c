@@ -137,29 +137,7 @@ void joysticTrRs(int k, uint8_t* txBuf, uint8_t* rxBuf)
 #define FLASH_TYPEERASEDATA_HALFWORD     (0x01U)  // ??????? 2 ?????
 #define FLASH_TYPEERASEDATA_WORD         (0x02U)  // ??????? 4 ?????
 
-//void writeToEEPROM (uint32_t address, uint32_t value)
-//{
-//  HAL_StatusTypeDef flash_ok = HAL_ERROR;
-//  while (flash_ok != HAL_OK)
-//  {
-//    flash_ok = HAL_FLASHEx_DATAEEPROM_Unlock();
-//  }
-//  flash_ok = HAL_ERROR;
-//  while (flash_ok != HAL_OK)
-//  {
-//    flash_ok = HAL_FLASHEx_DATAEEPROM_Erase (FLASH_TYPEERASEDATA_WORD, address);
-//  }
-//  flash_ok = HAL_ERROR;
-//  while (flash_ok != HAL_OK)
-//  {
-//    flash_ok = HAL_FLASHEx_DATAEEPROM_Program (FLASH_TYPEPROGRAMDATA_WORD, address, value);
-//  }
-//  flash_ok = HAL_ERROR;
-//  while (flash_ok != HAL_OK)
-//  {
-//    flash_ok = HAL_FLASHEx_DATAEEPROM_Lock ();
-//  }
-//}
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -174,9 +152,6 @@ void joysticTrRs(int k, uint8_t* txBuf, uint8_t* rxBuf)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	
-
-
 
   /* USER CODE END 1 */
 
@@ -626,19 +601,36 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-uint16_t adc_val[2] = {0,0};
-
-uint16_t adc_val_max0 = 4030;
-uint16_t adc_val_min0 = 2600;//2480;
-
-uint16_t adc_val_max1 = 3130;
-uint16_t adc_val_min1 = 2000;
-
-////filter data
+////encoders filter data
 uint16_t adc_val_f[2] = {0,0};
 unsigned int LPIN0, LPIN1;
 unsigned long LPACC0, LPACC1;
 const int K = 70;
+
+///////////////////////////////////////////////////////////////
+////encoders data
+uint16_t adc_val[2] = {0,0};
+
+uint16_t adc_val_max0 = 3900;
+uint16_t adc_val_min0 = 2600;//2480;
+
+uint16_t adc_val_max1 = 3000;
+uint16_t adc_val_min1 = 2000;
+
+//motors & servo config
+uint16_t M0Speed = 299;
+uint16_t M1Speed = 299;
+///////////////////////////////////////////////////////////////
+
+
+
+	//servos data
+	uint16_t S1 = 50;
+	uint16_t S2 = 50;
+	uint16_t S3 = 50;
+	uint8_t dS = 1;
+
+
 
 
 /* USER CODE END 4 */
@@ -655,32 +647,17 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN 5 */
   /* USER CODE BEGIN StartDefaultTask */
 	/* USER CODE BEGIN StartDefaultTask */
-	//servos data
-	uint8_t S1 = 0;
-	uint8_t S2 = 0;
-	uint8_t S3 = 0;
-	uint8_t dS = 7;
-	//encode data
+
 	
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_val, 2);
 	
-//	HAL_FLASH_Unlock();
-//	//encode max1
-//	uint16_t encodeMax1 = 50; 
-	
-	///trial memory
-	uint8_t mem = 0;
-	HAL_StatusTypeDef	flash_ok = HAL_ERROR;
-	
-	//encode max2
-	uint16_t encodeMax2 = 50;
-	
+	////Servo start pos
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); // Servo_1 Timer Start
-	TIM3->CCR1 = 250;
+	TIM3->CCR1 = S1;
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2); // Servo_2 Timer Start
-	TIM3->CCR2 = 250;
+	TIM3->CCR2 = S2;
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3); // Servo_3 Timer Start
-	TIM3->CCR3 = 250;
+	TIM3->CCR3 = S3;
 	
 
 	unsigned short int timer = 0;
@@ -692,14 +669,15 @@ void StartDefaultTask(void *argument)
 //										  0x01, 0x4F, 0x00, 0xFF, 0xFF, 0x03, 0x00, 0x00, 0x00,
 //										  0x01, 0x43, 0x00, 0x00, 0x5A, 0x5A, 0x5A, 0x5A, 0x5A}; 
 	
-											///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
+///	configuration into analog mode	
 	uint8_t tx4Buf[5] = {0x01, 0x43, 0x00, 0x01, 0x00};	// FF 41 5A FF FF
 	uint8_t tx5Buf[9] = {0x01, 0x44, 0x00, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00};	//FF	F3	5A	00	00	00	00	00	00
 	uint8_t tx6Buf[9] = {0x01, 0x4D, 0x00, 0x00, 0x01, 0xFF, 0xFF, 0xFF, 0xFF}; //FF	F3	5A	00	01	FF	FF	FF	FF
 	uint8_t tx7Buf[9] = {0x01, 0x4F, 0x00, 0xFF, 0xFF, 0x03, 0x00, 0x00, 0x00};	//FF	F3	5A	00	00	00	00	00	5A
 	uint8_t tx8Buf[9] = {0x01, 0x43, 0x00, 0x00, 0x5A, 0x5A, 0x5A, 0x5A, 0x5A};	//FF	F3	5A	00	00	00	00	00	00										
 											
-											///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
 	uint8_t bufSize = 21;
 
 	uint8_t txAnalogBuf[21] = {0x01, 0x42, 0x00, 0x00, 0x00,
@@ -712,12 +690,12 @@ void StartDefaultTask(void *argument)
 
 	uint8_t txBuf[5] = {0x01, 0x42, 0x00, 0xFF, 0xFF};
 
+////Motor speed	
+	TIM2->ARR = M0Speed;
+	TIM4->ARR = M1Speed;
+
 
 	
-////Motor speed	
-		TIM2->ARR = 2999;
-//	TIM4->ARR = 2999;
-
 //  /* Infinite loop */
 ///	configuration into analog mode										
 	joysticTransmition( 5, tx4Buf);
@@ -731,22 +709,19 @@ void StartDefaultTask(void *argument)
 	joysticTransmition( 9, tx8Buf);
 	osDelay(50);
 	float rotate_time = 10;
+	
+
   for(;;)
   {
-		
-	  ///config into analog mode
+		///config into analog mode
 		joysticTrRs( 21, txAnalogBuf, rxBuf);
-		
+	
 		osMessageQueuePut(myQueue01Handle, &rxBuf[4], 0, 100); // delay ???
-			
-		//////////////////
-		//encode data(adc_val[1] > 2400) && (adc_val[1] < 4100))
-		//////////////////
-		
 		
 		// START_MOOVING motors
 	
 			if(((rxBuf[4] & 0x20)  == 0) || ((rxBuf[4] & 0x80)  == 0)) {    		
+
 				if((rxBuf[4] & 0x20)  == 0){  // Circle
 					if(adc_val_f[0] > adc_val_min0){
 						HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
@@ -777,57 +752,6 @@ void StartDefaultTask(void *argument)
 			else{
 				HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
 			}		
-/////////////////////////////////////////////////////////////////////////////////////////
-			///2 motor
-//			if(((rxBuf[4] & 0x10)  == 0) || ((rxBuf[4] & 0x40)  == 0)) {
-//				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
-//				if((rxBuf[4] & 0x40 ) == 0){   // X button
-//					if(adc_val_f[1] < adc_val_max1){
-//						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-//					}
-//					else{
-//						//vibration
-//						joysticTrRs( 21, txAnalogBuf, rxBuf);
-//						joysticTrRs( 21, txVibroBuf, rxBuf);
-//						joysticTrRs( 21, txVibroBuf, rxBuf);
-//						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-//						HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
-//					}
-//				}
-//				else{ // Triangular
-//					if(adc_val_f[1] > adc_val_min1){
-//						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-//					}
-//					else{
-//						//vibration
-//						joysticTrRs( 21, txAnalogBuf, rxBuf);
-//						joysticTrRs( 21, txVibroBuf, rxBuf);
-//						joysticTrRs( 21, txVibroBuf, rxBuf);
-//						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
-//						HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
-//					}
-//				}
-//			}
-//			else{
-//				HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
-//			}
-/////////////////////////////////////////////////////////////////////////////////////////////
-//		}
-//		else			//vibration while over moved		
-//		{
-//			//vibration
-//			joysticTrRs( 21, txAnalogBuf, rxBuf);
-//			joysticTrRs( 21, txVibroBuf, rxBuf);
-//			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-//			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
-//		}
-//			//vibration while over moved		
-//			if(adc_val_f[1] < 2000)
-//			{
-//				//vibration
-//					joysticTrRs( 21, txAnalogBuf, rxBuf);
-//					joysticTrRs( 21, txVibroBuf, rxBuf);
-//			}
 
 //		///////////////Servo delta
 //		if((rxBuf[4] & 0x10 ) == 0){
@@ -848,10 +772,10 @@ void StartDefaultTask(void *argument)
 			else{ // RIGHT button
 				S1 = S1 + dS;
 			}
-			if ( S1 > 200){S1 = 200;}
-			if ( S1 < 1){S1 = 1;}
-			TIM3->CCR1 = 50 + S1;
-			osDelay(300);
+			if ( S1 > 250){S1 = 250;}
+			if ( S1 < 49){S1 = 50;}
+			TIM3->CCR1 = S1;
+			osDelay(50);
 		}
 		else{
 			// NO UP||DOWN buttons
@@ -865,46 +789,33 @@ void StartDefaultTask(void *argument)
 			else{ // UP button
 				S2 = S2 + dS;
 			}
-			if ( S2 > 200){S2 = 200;}
-			if ( S2 < 1){S2 = 1;}
-			TIM3->CCR2 = 50 + S2;
-			osDelay(300);
+			if ( S2 > 250){S2 = 250;}
+			if ( S2 < 49){S2 = 50;}
+			TIM3->CCR2 = S2;
+			osDelay(50);
 		}
 		else{
 			// NO UP||DOWN buttons
 		}
 		
 		///////////////Servo3
-		if(((rxBuf[4] & 0x01) == 0) || ((rxBuf[4] & 0x04) == 0)){
+		if(((rxBuf[4] & 0x01) == 0) || ((rxBuf[4] & 0x02) == 0)){
 			if ((rxBuf[4] & 0x01) == 0){ // L2 button
 				S3 = S3 - dS;
 			}
 			else{ // R2 button
 				S3 = S3 + dS;
 			}
-			if ( S3 > 200){S3 = 200;}
-			if ( S3 < 1){S3 = 1;}
-			TIM3->CCR3 = 50 + S3;
+			if ( S3 > 250){S3 = 250;}
+			if ( S3 < 49){S3 = 50;}
+			TIM3->CCR3 = S3;
+			osDelay(50);
 		}
 		else{
 			// NO R2||L2 buttons
 		}
-		
-//		//open memory
-//		while(flash_ok != HAL_OK){
-//			flash_ok = HAL_FLASH_Unlock();
-//		}
-//		flash_ok = HAL_ERROR;
-//		while(flash_ok != HAL_OK){
-////			flash_ok = HAL_FLASH_Program(TYPEPROGRAM_WORD, 0x08100000, 0x7777);
-//		}	
-//		//close memory
-//		flash_ok = HAL_ERROR;
-//		while(flash_ok != HAL_OK){
-//			flash_ok = HAL_FLASH_Lock();
-//		}
-		
-		///	configuration into analog mode
+				
+		///	configuration into analog mode every x seconds
 		timer++;
 		if(timer >= 300)
 		{
@@ -922,7 +833,6 @@ void StartDefaultTask(void *argument)
 			timer = 0;
 		}
 		
-		
 		////encode data filter
 		LPIN0 = (double)(adc_val[0]);
 		LPIN1 = (double)(adc_val[1]);
@@ -931,22 +841,8 @@ void StartDefaultTask(void *argument)
 		LPACC0 = LPACC0 + LPIN0 - adc_val_f[0];
 		LPACC1 = LPACC1 + LPIN1 - adc_val_f[1];
 		
-		
     osDelay(10);
-	//	for (int i = 0; i<100;i++);
   }
-//int LPIN;
-
-//unsigned int LPOUT = 0;
-//unsigned long LPACC;
-//const int K = 50;
-
-//LPIN = (double)(adc_val[0]) *2.5;
-
-//if (LPIN < 0) LPIN = 0;
-
-//LPOUT = (int)( (unsigned long)LPACC/K);
-//LPACC = LPACC + LPIN - LPOUT;
   /* USER CODE END 5 */
 }
 
@@ -961,7 +857,7 @@ void StartTask02(void *argument)
 {
   /* USER CODE BEGIN StartTask02 */
 	uint8_t data[5] = {0, 0, 0, 0, 0};
-		uint8_t txAnalogBuf[21] = {0x01, 0x42, 0x00, 0x00, 0x00,
+	uint8_t txAnalogBuf[21] = {0x01, 0x42, 0x00, 0x00, 0x00,
 														 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 														 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 	uint8_t rxBuf[21];
@@ -1007,8 +903,6 @@ void StartTask02(void *argument)
 				HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
 			}
   }
-
-
   /* USER CODE END StartTask02 */
 }
 
