@@ -619,12 +619,15 @@ uint16_t adc_val_max1 = 3000;
 uint16_t adc_val_min1 = 2000;
 
 //motors & servo config
-uint16_t M0Speed = 299;
-uint16_t M1Speed = 299;
+uint16_t M0Speed = 1000;
+uint16_t M1Speed = 1000;
 uint16_t M0MaxSpeed = 2000;
 uint16_t M1MaxSpeed = 2000;
 uint16_t M0MinSpeed = 500;
 uint16_t M1MinSpeed = 500;
+
+uint16_t M0StartPos = 3380;
+uint16_t M1StartPos = 2700;
 ///////////////////////////////////////////////////////////////
 
 
@@ -732,7 +735,51 @@ void StartDefaultTask(void *argument)
 					}
 				}
 				else{
+					
 				}
+				
+			////START button but O button
+			if((rxBuf[4] & 0x20) == 0){		
+				TIM2->ARR = M0Speed;
+				TIM4->ARR = M1Speed;
+				do{
+					HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_val, 2);
+					////encode data filter
+					LPIN1 = (double)(adc_val[1]);
+					adc_val_f[1] = (int)( (unsigned long)LPACC1/K);
+					LPACC1 = LPACC1 + LPIN1 - adc_val_f[1];
+					
+					if( adc_val_f[1] > M1StartPos){
+						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+					}
+					else{
+						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+					}
+					HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+					osDelay(10);
+				}
+				while( adc_val_f[1] != M1StartPos);
+					HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
+				do{
+					HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adc_val, 2);
+					////encode data filter
+					LPIN0 = (double)(adc_val[0]);
+					adc_val_f[0] = (int)( (unsigned long)LPACC0/K);
+					LPACC0 = LPACC0 + LPIN0 - adc_val_f[0];
+					
+					if( adc_val_f[0] > M0StartPos){
+						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
+					}
+					else{
+						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
+					}
+					HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+					osDelay(10);
+				}
+				while( adc_val_f[0] != M0StartPos);
+					HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+				
+			}
 		
 //////////////////////////////////////////////////////////////////////////////////		
 			
