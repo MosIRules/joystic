@@ -621,10 +621,10 @@ uint16_t adc_val_min1 = 2000;
 //motors & servo config
 uint16_t M0Speed = 299;
 uint16_t M1Speed = 299;
-uint16_t M0MaxSpeed = 2999;
-uint16_t M1MaxSpeed = 2999;
-uint16_t M0MinSpeed = 299;
-uint16_t M1MinSpeed = 299;
+uint16_t M0MaxSpeed = 2000;
+uint16_t M1MaxSpeed = 2000;
+uint16_t M0MinSpeed = 500;
+uint16_t M1MinSpeed = 500;
 ///////////////////////////////////////////////////////////////
 
 
@@ -742,6 +742,8 @@ void StartDefaultTask(void *argument)
 						if((rxBuf[6] != 0x7F) && (rxBuf[6] <= 0xFF)){   //if stick is used
 							if(rxBuf[6] < 0x7F){ //if stick up
 								if(adc_val_f[1] > adc_val_min1){
+									//TIM4->ARR = map( rxBuf[6], M1MinSpeed, M1MaxSpeed);
+									TIM4->ARR = (rxBuf[6] - 0x00) * (M1MaxSpeed - M1MinSpeed) / (0x7F - 0x00) + M1MinSpeed;
 									HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
 									HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 								}
@@ -756,6 +758,8 @@ void StartDefaultTask(void *argument)
 							else{//if stick down
 							// ex-X button
 								if(adc_val_f[1] < adc_val_max1){
+									//TIM4->ARR = map( rxBuf[6], M1MinSpeed, M1MaxSpeed);
+									TIM4->ARR = M1MaxSpeed - ((rxBuf[6] - 0x7F) * (M1MaxSpeed - M1MinSpeed) / (0xFF - 0x7F) + M1MinSpeed) + M1MinSpeed;
 									HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
 									HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
 								}
@@ -895,6 +899,7 @@ void StartTask02(void *argument)
 				flg = 0;
 				if(data[0] > 0x80){ //if stick is on right
 					if(adc_val_f[0] > adc_val_min0){
+						TIM2->ARR = M0MaxSpeed - ((data[0] - 0x80) * (M0MaxSpeed - M0MinSpeed) / (0xFF - 0x80) + M0MinSpeed) + M0MinSpeed;
 						HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
 					}
@@ -909,6 +914,7 @@ void StartTask02(void *argument)
 				else{//if stick is on left
 				// ex-X button
 					if(adc_val_f[0] < adc_val_max0){
+						TIM2->ARR = (data[0] - 0x00) * (M0MaxSpeed - M0MinSpeed) / (0x80 - 0x00) + M0MinSpeed;
 						HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
 						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
 					}
