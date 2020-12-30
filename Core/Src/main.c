@@ -738,8 +738,8 @@ void StartDefaultTask(void *argument)
 					
 				}
 				
-			////START button but O button
-			if((rxBuf[4] & 0x20) == 0){		
+			////START button
+			if((rxBuf[3] & 0x08) == 0){		
 				TIM2->ARR = M0Speed;
 				TIM4->ARR = M1Speed;
 				do{
