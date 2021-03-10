@@ -64,17 +64,24 @@ osThreadId_t myTask02Handle;
 const osThreadAttr_t myTask02_attributes = {
   .name = "myTask02",
   .priority = (osPriority_t) osPriorityLow,
-  .stack_size = 256 * 4
+  .stack_size = 128 * 4
+};
+/* Definitions for myTask03 */
+osThreadId_t myTask03Handle;
+const osThreadAttr_t myTask03_attributes = {
+  .name = "myTask03",
+  .priority = (osPriority_t) osPriorityLow,
+  .stack_size = 128 * 4
 };
 /* Definitions for myQueue01 */
 osMessageQueueId_t myQueue01Handle;
 const osMessageQueueAttr_t myQueue01_attributes = {
   .name = "myQueue01"
 };
-/* Definitions for myQueueData */
-osMessageQueueId_t myQueueDataHandle;
-const osMessageQueueAttr_t myQueueData_attributes = {
-  .name = "myQueueData"
+/* Definitions for myQueue02 */
+osMessageQueueId_t myQueue02Handle;
+const osMessageQueueAttr_t myQueue02_attributes = {
+  .name = "myQueue02"
 };
 /* Definitions for myTimer01 */
 osTimerId_t myTimer01Handle;
@@ -96,6 +103,7 @@ static void MX_TIM4_Init(void);
 static void MX_ADC1_Init(void);
 void StartDefaultTask(void *argument);
 void StartTask02(void *argument);
+void StartTask03(void *argument);
 void Callback01(void *argument);
 
 /* USER CODE BEGIN PFP */
@@ -206,8 +214,8 @@ int main(void)
   /* creation of myQueue01 */
   myQueue01Handle = osMessageQueueNew (16, sizeof(uint16_t), &myQueue01_attributes);
 
-  /* creation of myQueueData */
-  myQueueDataHandle = osMessageQueueNew (16, sizeof(uint16_t), &myQueueData_attributes);
+  /* creation of myQueue02 */
+  myQueue02Handle = osMessageQueueNew (16, sizeof(uint16_t), &myQueue02_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -219,6 +227,9 @@ int main(void)
 
   /* creation of myTask02 */
   myTask02Handle = osThreadNew(StartTask02, NULL, &myTask02_attributes);
+
+  /* creation of myTask03 */
+  myTask03Handle = osThreadNew(StartTask03, NULL, &myTask03_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -606,7 +617,6 @@ uint16_t adc_val_f[2] = {0,0};
 unsigned int LPIN0, LPIN1;
 unsigned long LPACC0, LPACC1;
 const int K = 70;
-uint8_t flg = 0;
 
 ///////////////////////////////////////////////////////////////
 ////encoders data
@@ -637,9 +647,8 @@ uint16_t S2 = 50;
 uint16_t S3 = 50;
 uint8_t dS = 1;
 
-unsigned short int timer = 0;
+unsigned short int timer = 300;
 unsigned short int prev_timer = 0;
-
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -702,18 +711,36 @@ void StartDefaultTask(void *argument)
 
 	
 //  /* Infinite loop */
-///	configuration into analog mode										
-	joysticTransmition( 5, tx4Buf);
-	osDelay(20);
-	joysticTransmition( 9, tx5Buf);
-	osDelay(20);
-	joysticTransmition( 9, tx6Buf);
-	osDelay(20);
-	joysticTransmition( 9, tx7Buf);
-	osDelay(20);
-	joysticTransmition( 9, tx8Buf);
-	osDelay(20);
+/////	configuration into analog mode										
+//	joysticTransmition( 5, tx4Buf);
+//	osDelay(20);
+//	joysticTransmition( 9, tx5Buf);
+//	osDelay(20);
+//	joysticTransmition( 9, tx6Buf);
+//	osDelay(20);
+//	joysticTransmition( 9, tx7Buf);
+//	osDelay(20);
+//	joysticTransmition( 9, tx8Buf);
+//	osDelay(20);
 	float rotate_time = 10;
+	
+		///	configuration into analog mode every x seconds
+	timer++;
+	if(timer >= 300)
+	{
+		///	configuration into analog mode										
+		joysticTransmition( 5, tx4Buf);
+		osDelay(20);
+		joysticTransmition( 9, tx5Buf);
+		osDelay(20);
+		joysticTransmition( 9, tx6Buf);
+		osDelay(20);
+		joysticTransmition( 9, tx7Buf);
+		osDelay(20);
+		joysticTransmition( 9, tx8Buf);
+		osDelay(20);
+		timer = 0;
+	}
 	
 
   for(;;)
@@ -722,7 +749,11 @@ void StartDefaultTask(void *argument)
 		joysticTrRs( 21, txAnalogBuf, rxBuf);
 
 		// START_MOOVING motors
-
+		///////////////////////////////////////
+		// checkin joy connection
+		if(rxBuf[1] != 0x79){
+// add into else?		HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
+		///////////////////////////////////////
 			////x button
 			if((rxBuf[4] & 0x40 ) == 0){		
 					if( (prev_timer > timer) || ( timer - prev_timer > 50))
@@ -784,9 +815,21 @@ void StartDefaultTask(void *argument)
 //////////////////////////////////////////////////////////////////////////////////		
 			
 				
-				if(((rxBuf[4] & 0x04) == 0) || ((rxBuf[4] & 0x08) == 0)){ //R1||L1 buttons
-					if((rxBuf[4] & 0x08) == 0){ //R1 button
-						if((rxBuf[6] != 0x7F) && (rxBuf[6] <= 0xFF)){   //if stick is used
+						if(rxBuf[6] != 0xFF){   //if stick is used
+							
+							//putting data into the queue
+						osMessageQueuePut(myQueue01Handle, &rxBuf[6], 0, 100); 
+						}
+						else{
+							HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);						}
+						if(rxBuf[7] != 0xFF){ //&& (rxBuf[7] <= 0xFF)){   //if stick is used
+								//putting data into the queue
+						osMessageQueuePut(myQueue02Handle, &rxBuf[7], 0, 100); 
+						}
+						else{
+								HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+						}
+/*							
 							if(rxBuf[6] < 0x7F){ //if stick up
 								if(adc_val_f[1] > adc_val_min1){
 									//TIM4->ARR = map( rxBuf[6], M1MinSpeed, M1MaxSpeed);
@@ -822,87 +865,67 @@ void StartDefaultTask(void *argument)
 						else{ 
 								HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3); ////needed?????
 							}
-					}
-					else{ //putting data into the queue
-						flg = 1;
-						osMessageQueuePut(myQueue01Handle, &rxBuf[7], 0, 100); // delay ???
-					}
-				}
-				else{ //buttons R1 ||R2 unpressed			
-					HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3); ////needed?????
-					HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2); ////needed?????
-				}				
+		*/
 //////////////////////////////////////////////////////////////////////////////////					
-			
-		///////////////Servo1
-		if(((rxBuf[3] & 0x80) == 0) || ((rxBuf[3] & 0x20) == 0)){
-			if ((rxBuf[3] & 0x80) == 0){ // LEFT button
-				S1 = S1 - dS;
-			}
-			else{ // RIGHT button
-				S1 = S1 + dS;
-			}
-			if ( S1 > 250){S1 = 250;}
-			if ( S1 < 49){S1 = 50;}
-			TIM3->CCR1 = S1;
-			osDelay(50);
-		}
-		else{
-			// NO UP||DOWN buttons
-		}
-		
-		///////////////Servo2
-		if(((rxBuf[3] & 0x10) == 0) || ((rxBuf[3] & 0x40) == 0)){
-			if ((rxBuf[3] & 0x10) == 0){ // DOWN button
-				S2 = S2 - dS;
-			}
-			else{ // UP button
-				S2 = S2 + dS;
-			}
-			if ( S2 > 250){S2 = 250;}
-			if ( S2 < 49){S2 = 50;}
-			TIM3->CCR2 = S2;
-			osDelay(50);
-		}
-		else{
-			// NO UP||DOWN buttons
-		}
-		
-		///////////////Servo3
-		if(((rxBuf[4] & 0x01) == 0) || ((rxBuf[4] & 0x02) == 0)){
-			if ((rxBuf[4] & 0x01) == 0){ // L2 button
-				S3 = S3 - dS;
-			}
-			else{ // R2 button
-				S3 = S3 + dS;
-			}
-			if ( S3 > 250){S3 = 250;}
-			if ( S3 < 49){S3 = 50;}
-			TIM3->CCR3 = S3;
-			osDelay(50);
-		}
-		else{
-			// NO R2||L2 buttons
-		}
+	/*		
+//		///////////////Servo1
+//		if(((rxBuf[3] & 0x80) == 0) || ((rxBuf[3] & 0x20) == 0)){
+//			if ((rxBuf[3] & 0x80) == 0){ // LEFT button
+//				S1 = S1 - dS;
+//			}
+//			else{ // RIGHT button
+//				S1 = S1 + dS;
+//			}
+//			if ( S1 > 250){S1 = 250;}
+//			if ( S1 < 49){S1 = 50;}
+//			TIM3->CCR1 = S1;
+//			osDelay(50);
+//		}
+//		else{
+//			// NO UP||DOWN buttons
+//		}
+//		
+//		///////////////Servo2
+//		if(((rxBuf[3] & 0x10) == 0) || ((rxBuf[3] & 0x40) == 0)){
+//			if ((rxBuf[3] & 0x10) == 0){ // DOWN button
+//				S2 = S2 - dS;
+//			}
+//			else{ // UP button
+//				S2 = S2 + dS;
+//			}
+//			if ( S2 > 250){S2 = 250;}
+//			if ( S2 < 49){S2 = 50;}
+//			TIM3->CCR2 = S2;
+//			osDelay(50);
+//		}
+//		else{
+//			// NO UP||DOWN buttons
+//		}
+//		
+//		///////////////Servo3
+//		if(((rxBuf[4] & 0x01) == 0) || ((rxBuf[4] & 0x02) == 0)){
+//			if ((rxBuf[4] & 0x01) == 0){ // L2 button
+//				S3 = S3 - dS;
+//			}
+//			else{ // R2 button
+//				S3 = S3 + dS;
+//			}
+//			if ( S3 > 250){S3 = 250;}
+//			if ( S3 < 49){S3 = 50;}
+//			TIM3->CCR3 = S3;
+//			osDelay(50);
+//		}
+//		else{
+//			// NO R2||L2 buttons
+//		}
 				
-		///	configuration into analog mode every x seconds
-		timer++;
-		if(timer >= 300)
+*/
+}
+		else
 		{
-			///	configuration into analog mode										
-			joysticTransmition( 5, tx4Buf);
-			osDelay(20);
-			joysticTransmition( 9, tx5Buf);
-			osDelay(20);
-			joysticTransmition( 9, tx6Buf);
-			osDelay(20);
-			joysticTransmition( 9, tx7Buf);
-			osDelay(20);
-			joysticTransmition( 9, tx8Buf);
-			osDelay(20);
-			timer = 0;
+			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
+			HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
 		}
-		
 		////encode data filter
 		LPIN0 = (double)(adc_val[0]);
 		LPIN1 = (double)(adc_val[1]);
@@ -935,52 +958,161 @@ void StartTask02(void *argument)
 														0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 														0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-	uint8_t txBuf[5] = {0x01, 0x42, 0x00, 0xFF, 0xFF};
+//	uint8_t txBuf[5] = {0x01, 0x42, 0x00, 0xFF, 0xFF};
 
   /* Infinite loop */
+	osStatus_t status;
   for(;;)
 	{				
-		if( flg == 1){
-			osMessageQueueGet(myQueue01Handle, data, 0, 100);
-			if((data[0] != 0x80) && (data[0] <= 0xFF)){   //if stick is used
-				flg = 0;
-				if(data[0] > 0x80){ //if stick is on right
-					if(adc_val_f[0] > adc_val_min0){
-						TIM2->ARR = M0MaxSpeed - ((data[0] - 0x80) * (M0MaxSpeed - M0MinSpeed) / (0xFF - 0x80) + M0MinSpeed) + M0MinSpeed;
-						HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
-					}
-					else{
-						//vibration
-						joysticTrRs( 21, txAnalogBuf, rxBuf);
-						joysticTrRs( 21, txVibroBuf, rxBuf);
-						joysticTrRs( 21, txVibroBuf, rxBuf);
-						HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-					}
-				}
-				else{//if stick is on left
-				// ex-X button
-					if(adc_val_f[0] < adc_val_max0){
-						TIM2->ARR = (data[0] - 0x00) * (M0MaxSpeed - M0MinSpeed) / (0x80 - 0x00) + M0MinSpeed;
-						HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
-					}
-					else{
-						//vibration
-						joysticTrRs( 21, txAnalogBuf, rxBuf);
-						joysticTrRs( 21, txVibroBuf, rxBuf);
-						joysticTrRs( 21, txVibroBuf, rxBuf);
-						HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-					}
-				}
-			}
-			else{ 
-				HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-			}
+//		if( flg == 1){
+//			osMessageQueueGet(myQueue01Handle, data, 0, 100);
+//			if((data[0] != 0x80) && (data[0] <= 0xFF)){   //if stick is used
+//				flg = 0;
+//				if(data[0] > 0x80){ //if stick is on right
+//					if(adc_val_f[0] > adc_val_min0){
+//						TIM2->ARR = M0MaxSpeed - ((data[0] - 0x80) * (M0MaxSpeed - M0MinSpeed) / (0xFF - 0x80) + M0MinSpeed) + M0MinSpeed;
+//						HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+//						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
+//					}
+//					else{
+//						//vibration
+//						joysticTrRs( 21, txAnalogBuf, rxBuf);
+//						joysticTrRs( 21, txVibroBuf, rxBuf);
+//						joysticTrRs( 21, txVibroBuf, rxBuf);
+//						HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+//					}
+//				}
+//				else{//if stick is on left
+//				// ex-X button
+//					if(adc_val_f[0] < adc_val_max0){
+//						TIM2->ARR = (data[0] - 0x00) * (M0MaxSpeed - M0MinSpeed) / (0x80 - 0x00) + M0MinSpeed;
+//						HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+//						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
+//					}
+//					else{
+//						//vibration
+//						joysticTrRs( 21, txAnalogBuf, rxBuf);
+//						joysticTrRs( 21, txVibroBuf, rxBuf);
+//						joysticTrRs( 21, txVibroBuf, rxBuf);
+//						HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+//					}
+//				}
+//			}
+//			else{ 
+//				HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+//			}
 			
-		}
+//		}
+//osDelay(1);
+		status = osMessageQueueGet(myQueue01Handle, data, 0, 100);
+		//osMessageQueue
+		if (status == osOK) {
+							if(data[0] < 0x7F){ //if stick up
+								if(adc_val_f[1] > adc_val_min1){
+									//TIM4->ARR = map( rxBuf[6], M1MinSpeed, M1MaxSpeed);
+									TIM4->ARR = (data[0] - 0x00) * (M1MaxSpeed - M1MinSpeed) / (0x7F - 0x00) + M1MinSpeed;
+									HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+									HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
+								}
+								else{
+									//vibration
+									joysticTrRs( 21, txAnalogBuf, rxBuf);
+									joysticTrRs( 21, txVibroBuf, rxBuf);
+									joysticTrRs( 21, txVibroBuf, rxBuf);
+									HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
+								}
+							}
+							else{//if stick down
+							// ex-X button
+								if(adc_val_f[1] < adc_val_max1){
+									//TIM4->ARR = map( rxBuf[6], M1MinSpeed, M1MaxSpeed);
+									TIM4->ARR = M1MaxSpeed - ((data[0] - 0x7F) * (M1MaxSpeed - M1MinSpeed) / (0xFF - 0x7F) + M1MinSpeed) + M1MinSpeed;
+									HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+									HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
+								}
+								else{
+									//vibration
+									joysticTrRs( 21, txAnalogBuf, rxBuf);
+									joysticTrRs( 21, txVibroBuf, rxBuf);
+									joysticTrRs( 21, txVibroBuf, rxBuf);
+									HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);
+								}	
+							}
+						}
   }
   /* USER CODE END StartTask02 */
+}
+
+/* USER CODE BEGIN Header_StartTask03 */
+/**
+* @brief Function implementing the myTask03 thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartTask03 */
+void StartTask03(void *argument)
+{
+  /* USER CODE BEGIN StartTask03 */
+  /* Infinite loop */
+	
+	  /* USER CODE BEGIN StartTask02 */
+	uint8_t data[5] = {0, 0, 0, 0, 0};
+//	uint8_t txAnalogBuf[21] = {0x01, 0x42, 0x00, 0x00, 0x00,
+//														 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//														 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+//	uint8_t rxBuf[21];
+//	uint8_t txVibroBuf[21] = {0x01, 0x42, 0x00, 0xFF, 0xFF,
+//														0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//														0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+//	uint8_t txBuf[5] = {0x01, 0x42, 0x00, 0xFF, 0xFF};
+
+  /* Infinite loop */
+	osStatus_t status;
+	
+  for(;;)
+  {
+		/// memory is full :(
+		status = osMessageQueueGet(myQueue02Handle, data, 0, 100);
+		//osMessageQueue
+		if (status == osOK) {
+				if(data[0] > 0x80){ //if stick is on right
+					if(adc_val_f[0] > adc_val_min0){
+						HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
+					}
+//						TIM2->ARR = M0MaxSpeed - ((data[0] - 0x80) * (M0MaxSpeed - M0MinSpeed) / (0xFF - 0x80) + M0MinSpeed) + M0MinSpeed;
+//						HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+//						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);
+//					}
+//					else{
+//						//vibration
+////						joysticTrRs( 21, txAnalogBuf, rxBuf);
+////						joysticTrRs( 21, txVibroBuf, rxBuf);
+////						joysticTrRs( 21, txVibroBuf, rxBuf);
+//						HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+//					}
+//				}
+//				else{//if stick is on left
+//				// ex-X button
+//					if(adc_val_f[0] < adc_val_max0){
+//						TIM2->ARR = (data[0] - 0x00) * (M0MaxSpeed - M0MinSpeed) / (0x80 - 0x00) + M0MinSpeed;
+//						HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+//						HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);
+//					}
+//					else{
+//						//vibration
+////						joysticTrRs( 21, txAnalogBuf, rxBuf);
+////						joysticTrRs( 21, txVibroBuf, rxBuf);
+////						joysticTrRs( 21, txVibroBuf, rxBuf);
+//						HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+//					}
+				}
+			
+			}
+
+  }
+  /* USER CODE END StartTask03 */
 }
 
 /* Callback01 function */
