@@ -3,7 +3,7 @@
 <title>Static Call Graph - [spi_joystick\spi_joystick.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image spi_joystick\spi_joystick.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060750: Last Updated: Wed Mar 10 19:29:32 2021
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060750: Last Updated: Wed Mar 17 17:36:50 2021
 <BR><P>
 <H3>Maximum Stack Usage =        264 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -262,8 +262,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[91]"></a>__aeabi_memcpy4</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, memcpya.o(.text))
-<BR><BR>[Called By]<UL><LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartTask02
-<LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDefaultTask
+<BR><BR>[Called By]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDefaultTask
 </UL>
 
 <P><STRONG><a name="[e6]"></a>__aeabi_memcpy8</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, memcpya.o(.text), UNUSED)
@@ -468,7 +467,6 @@ Global Symbols
 <LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;joysticTrRs
 <LI><a href="#[3f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartTask03
 <LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartTask02
-<LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDefaultTask
 <LI><a href="#[88]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
 </UL>
 
@@ -738,8 +736,7 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;TIM_CCxChannelCmd
 </UL>
-<BR>[Called By]<UL><LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartTask02
-<LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDefaultTask
+<BR>[Called By]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDefaultTask
 </UL>
 
 <P><STRONG><a name="[76]"></a>HAL_TIM_PeriodElapsedCallback</STRONG> (Thumb, 14 bytes, Stack size 0 bytes, main.o(i.HAL_TIM_PeriodElapsedCallback))
@@ -776,14 +773,13 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f103xb.o(RESET)
 </UL>
-<P><STRONG><a name="[3d]"></a>StartDefaultTask</STRONG> (Thumb, 640 bytes, Stack size 128 bytes, main.o(i.StartDefaultTask))
+<P><STRONG><a name="[3d]"></a>StartDefaultTask</STRONG> (Thumb, 368 bytes, Stack size 128 bytes, main.o(i.StartDefaultTask))
 <BR><BR>[Stack]<UL><LI>Max Depth = 264<LI>Call Chain = StartDefaultTask &rArr; osMessageQueuePut &rArr; xQueueGenericSend &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osMessageQueuePut
 <LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
 <LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_PWM_Stop
 <LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_PWM_Start
-<LI><a href="#[89]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_WritePin
 <LI><a href="#[57]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_ADC_Start_DMA
 <LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;joysticTransmition
 <LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;joysticTrRs
@@ -791,19 +787,16 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> main.o(i.main)
 </UL>
-<P><STRONG><a name="[3e]"></a>StartTask02</STRONG> (Thumb, 196 bytes, Stack size 88 bytes, main.o(i.StartTask02))
-<BR><BR>[Stack]<UL><LI>Max Depth = 224<LI>Call Chain = StartTask02 &rArr; osMessageQueueGet &rArr; xQueueReceive &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
+<P><STRONG><a name="[3e]"></a>StartTask02</STRONG> (Thumb, 112 bytes, Stack size 16 bytes, main.o(i.StartTask02))
+<BR><BR>[Stack]<UL><LI>Max Depth = 152<LI>Call Chain = StartTask02 &rArr; osMessageQueueGet &rArr; xQueueReceive &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osMessageQueueGet
-<LI><a href="#[84]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_PWM_Stop
 <LI><a href="#[82]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_PWM_Start
 <LI><a href="#[89]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_WritePin
-<LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;joysticTrRs
-<LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_memcpy4
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> main.o(i.main)
 </UL>
-<P><STRONG><a name="[3f]"></a>StartTask03</STRONG> (Thumb, 72 bytes, Stack size 16 bytes, main.o(i.StartTask03))
+<P><STRONG><a name="[3f]"></a>StartTask03</STRONG> (Thumb, 114 bytes, Stack size 16 bytes, main.o(i.StartTask03))
 <BR><BR>[Stack]<UL><LI>Max Depth = 152<LI>Call Chain = StartTask03 &rArr; osMessageQueueGet &rArr; xQueueReceive &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osMessageQueueGet
@@ -879,8 +872,7 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[6e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_TransmitReceive
 <LI><a href="#[89]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_WritePin
 </UL>
-<BR>[Called By]<UL><LI><a href="#[3e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartTask02
-<LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDefaultTask
+<BR>[Called By]<UL><LI><a href="#[3d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDefaultTask
 </UL>
 
 <P><STRONG><a name="[92]"></a>joysticTransmition</STRONG> (Thumb, 70 bytes, Stack size 32 bytes, main.o(i.joysticTransmition))
