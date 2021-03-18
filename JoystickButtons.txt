@@ -1,0 +1,10 @@
+R2 - FFFD
+R1 - FFF7
+L1 - FFFB
+L2 - FFFE
+СтрелкаВлево - 7FFF
+СтрелкаВправо - DFFF
+СтрелкаВверх - EFFF
+СтрелкаВниз - BFFF
+$ git tag
+v1.0
