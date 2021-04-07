@@ -89,7 +89,19 @@ const osTimerAttr_t myTimer01_attributes = {
   .name = "myTimer01"
 };
 /* USER CODE BEGIN PV */
+//_____________FLASH_START________________________
+ uint32_t var_write_to_flash = 0;
+ uint32_t var_read_from_flash = 0;
+ uint32_t pageAdr = 0x0800FC00; // ADDR OF LAST PAGE
+ uint32_t page_error = 0;
+ uint32_t abc = 0;	
 
+//servos data
+uint32_t S1 = 50;
+uint32_t S2 = 50;
+uint32_t S3 = 50;
+uint8_t dS = 1;
+											
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -189,6 +201,14 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);
+	
+   // READ FROM FLASH
+  var_read_from_flash = *(uint32_t*)(pageAdr);
+		//S1 = *(uint32_t*)(pageAdr);
+	S1 = var_read_from_flash & 0xFF;
+ 	S2 = (var_read_from_flash & 0xFF00) >> 8;
+	S3 = (var_read_from_flash & 0xFF0000) >> 16;
+
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -652,14 +672,12 @@ uint8_t txVibroBuf[21] = {0x01, 0x42, 0x00, 0xFF, 0xFF,
 													0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 ////////////////////////////////////hrthrthrthrthrthrthrt	
-//servos data
-uint16_t S1 = 50;
-uint16_t S2 = 50;
-uint16_t S3 = 50;
-uint8_t dS = 1;
+
 
 unsigned short int timer = 0;
 unsigned short int prev_timer = 0;
+													
+		
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -752,8 +770,81 @@ void StartDefaultTask(void *argument)
 					
 				}
 				
-			////START button
-			if((rxBuf[3] & 0x08) == 0){		
+			
+//////////////////////////////////////////////////////////////////////////////
+/////////////v2.2
+			if((rxBuf[6] != 0x7F) && (rxBuf[6] != 0x80) && (rxBuf[6] <= 0xFF)){   //if stick is used	
+				//putting data into the queue
+				osMessageQueuePut(myQueue01Handle, &rxBuf[6], 0, 50); 
+			}
+			else{
+				HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);						
+			}
+			if((rxBuf[5] != 0x80) && (rxBuf[5] <= 0xFF)){ //&& (rxBuf[7] <= 0xFF)){   //if stick is used
+					//putting data into the queue
+				osMessageQueuePut(myQueue02Handle, &rxBuf[5], 0, 50); 
+			}
+			else{
+					HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+			}
+/////////////v3.0 
+		///////////////Servo1
+		if(((rxBuf[3] & 0x80) == 0) || ((rxBuf[3] & 0x20) == 0)){
+			if ((rxBuf[3] & 0x80) == 0){ // LEFT button
+				S1 = S1 - dS;
+			}
+			else{ // RIGHT button
+				S1 = S1 + dS;
+			}
+			if ( S1 > 250){S1 = 250;}
+			if ( S1 < 49){S1 = 50;}
+			TIM3->CCR1 = S1;
+			osDelay(50);
+		}
+		else{
+			// NO UP||DOWN buttons
+		}
+		
+		///////////////Servo2
+		if(((rxBuf[3] & 0x10) == 0) || ((rxBuf[3] & 0x40) == 0)){
+			if ((rxBuf[3] & 0x10) == 0){ // DOWN button
+				S2 = S2 - dS;
+			}
+			else{ // UP button
+				S2 = S2 + dS;
+			}
+			if ( S2 > 250){S2 = 250;}
+			if ( S2 < 49){S2 = 50;}
+			TIM3->CCR2 = S2;
+			osDelay(50);
+		}
+		else{
+			// NO UP||DOWN buttons
+		}
+		
+		///////////////Servo3
+		if(((rxBuf[4] & 0x01) == 0) || ((rxBuf[4] & 0x02) == 0)){
+			if ((rxBuf[4] & 0x01) == 0){ // L2 button
+				S3 = S3 - dS;
+			}
+			else{ // R2 button
+				S3 = S3 + dS;
+			}
+			if ( S3 > 250){S3 = 250;}
+			if ( S3 < 49){S3 = 50;}
+			TIM3->CCR3 = S3;
+			osDelay(50);
+		}
+		else{
+			// NO R2||L2 buttons
+		}			
+		
+		
+/////////////////////////////////////////////////////////////////////////////
+////START button
+				/////////////v3.0 - addind into FLASH
+			if((rxBuf[3] & 0x08) == 0){
+				/*				
 				TIM2->ARR = M0Speed;
 				TIM4->ARR = M1Speed;
 				do{
@@ -792,26 +883,36 @@ void StartDefaultTask(void *argument)
 				}
 				while( adc_val_f[0] != M0StartPos);
 					HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
+					*/
+					uint32_t STim2 = S2 << 8;
+					uint32_t STim3 = S3 << 16;
+					var_write_to_flash = S1 + STim2 + STim3;
+					
+					
+					
+					//Unlock flash
+				 HAL_FLASH_Unlock();
+				 __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_WRPERR | FLASH_FLAG_PGERR);
+				
+				 HAL_StatusTypeDef flashstatus;
+				 FLASH_EraseInitTypeDef s_eraseinit;
+				 /* Fill EraseInit structure*/
+				 s_eraseinit.TypeErase = FLASH_TYPEERASE_PAGES;
+				 s_eraseinit.NbPages = 1;
+				 s_eraseinit.PageAddress = pageAdr;
+				 
+				 // Erase flash
+				 flashstatus = HAL_FLASHEx_Erase(&s_eraseinit, &page_error);
+				 // Program flash
+				 if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, s_eraseinit.PageAddress, var_write_to_flash) == HAL_OK)
+				 {
+					abc = 1;
+				 }
+				 //Lock flash
+				 HAL_FLASH_Lock();
 				
 			}
 		
-//////////////////////////////////////////////////////////////////////////////
-/////////////v2.2
-			if((rxBuf[6] != 0x7F) && (rxBuf[6] != 0x80) && (rxBuf[6] <= 0xFF)){   //if stick is used	
-				//putting data into the queue
-				osMessageQueuePut(myQueue01Handle, &rxBuf[6], 0, 50); 
-			}
-			else{
-				HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_3);						
-			}
-			if((rxBuf[5] != 0x80) && (rxBuf[5] <= 0xFF)){ //&& (rxBuf[7] <= 0xFF)){   //if stick is used
-					//putting data into the queue
-				osMessageQueuePut(myQueue02Handle, &rxBuf[5], 0, 50); 
-			}
-			else{
-					HAL_TIM_PWM_Stop(&htim2, TIM_CHANNEL_2);
-			}
-/////////////v2.2 - no servos
 /////////////////////////////////////////////////////////////////////////////	
 		///	configuration into analog mode every x seconds
 		timer++;
